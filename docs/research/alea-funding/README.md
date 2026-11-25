@@ -1,6 +1,6 @@
 # Funding scan for ALEA
 
-Scanned 2026-11-25 from web search snippets and two fetched pages. Nothing here was read on a funder's own application page except where noted, so every amount and date needs re-checking before use. Pages were not archived; add copies to `sources/` before any figure is cited in a proposal.
+Scanned 2026-11-25 from web search snippets plus fetched pages. Raw copies of the cited pages are in `sources/` (fetched 2026-11-25; see the table at the end). Search snippets were not archived, so a figure that rests only on a snippet is marked in the table. Re-check amounts and dates on the funder's live page before use.
 
 ## What ALEA offers a funder
 
@@ -10,7 +10,7 @@ MIT licence, open platform, 55 AU member states and five power pools, long-run p
 
 | Funder | Fit | Status on 2026-11-25 | Source |
 |---|---|---|---|
-| EnAccess Foundation (Innovation Pilot up to US$250k, Moonshot up to US$50k) | Open-source only; energy access focus; ALEA is MIT. Modelling fits the Moonshot wording | Terra Viva listing (12 Nov 2026) says rolling, no deadline. EnAccess's own FAQ says it does not currently give project grants and only issues occasional calls. Conflicting, unresolved | terravivagrants.org/innovations-for-energy-access/; enaccess.org/faq/; energypedia (apply at enaccess.org/submit/) |
+| EnAccess Foundation (Innovation Pilot up to US$250k, Moonshot up to US$50k) | Open-source only; energy access focus; ALEA is MIT. Modelling fits the Moonshot wording | Terra Viva listing (12 Nov 2026) says rolling, no deadline. EnAccess's own FAQ (archived) says: "We do not currently provide project grants, but occasionally, we may put out a specific call for proposals." It adds that it may join a fully open-source project as a partner and help co-fundraise. Conflicting, unresolved. The `enaccess.org/submit/` page cited by energypedia now returns 404 | terravivagrants.org/innovations-for-energy-access/; enaccess.org/faq/; energypedia (apply at enaccess.org/submit/) |
 | Climate Change AI Innovation Grants | ALEA's M8 (RL bidding) and forecasting; 2025 special track funded energy datasets (Google DeepMind) | 2026 round awarded Apr 2026. No 2026 or 2027 energy call found. 2024 terms: up to US$150k, 12 months | climatechange.ai/calls/ |
 | Bezos Earth Fund AI Grand Challenge | AI plus climate; global scope | No 2026 round found | bezosearthfund.org |
 | LEAP-SE (Europe-Africa research call) | Applied research, 12 to 36 months, about EUR 13M | Deadline 5 Feb 2026, closed. Needs a European/African consortium; watch for a 2027 call | africaeuropeinnovation.net |
@@ -33,5 +33,26 @@ MIT licence, open platform, 55 AU member states and five power pools, long-run p
 ## Next actions
 
 1. Email EnAccess to ask whether Moonshot or Pilot grants are open and whether a continental planning model fits "energy access".
-2. Fetch the live enaccess.org/submit/ form and the CCAI calls page, and archive both.
+2. Find EnAccess's current submission route (the old `/submit/` URL is a 404) and the CCAI calls page, and archive both.
 3. Draft a two-page concept note: problem, what is built (Kenya M1, PRG), what the money buys (full-year solve, M5 EAPP, validation against a utility), budget in three lines.
+
+## Archived sources (`sources/`, fetched 2026-11-25)
+
+| File | URL |
+|---|---|
+| terravivagrants-innovations-for-energy-access.html | https://www.terravivagrants.org/innovations-for-energy-access/ |
+| enaccess-support.html | https://enaccess.org/support/ |
+| enaccess-faq.html | https://enaccess.org/faq/ |
+| enaccess-agri-energy-call-2024.pdf | https://enaccess.org/wp-content/uploads/2024/09/Call-for-proposals_agri-energy-innovations.pdf |
+| energypedia-enaccess-opportunity.html | https://energypedia.info/wiki/Opportunity_-_EnAccess_Foundation |
+| leap-se-2026.html | https://www.africaeuropeinnovation.net/funding-opportunity/europe-africa-research-and-innovation-call-on-sustainable-energy-2026/ |
+| ccai-energy-dataset-track-2025.html | https://www.climatechange.ai/calls/innovation_grants_special_track_2025 |
+| ccai-2026-awards.html | https://www.climatechange.ai/press_releases/2026-04-29/release |
+| nlnet-commonsfund.html | https://www.nlnet.nl/commonsfund |
+| sloan-g-2023-19638.html | https://sloan.org/grant-detail/g-2023-19638 |
+| sefa-green-hydrogen-call-2026.html | https://news.fundsforngos.org/2026/04/09/afdb-launches-green-hydrogen-grant-programme-in-africa/ (aggregator, not the SEFA page) |
+| rockefeller-mission300-accelerator.html | https://www.rockefellerfoundation.org/news/rockefeller-foundation-mission-300-launch-test-ai-demand-finance-energy-access-africa/ |
+| bezos-earth-fund-ai-grand-challenge.html | https://www.bezosearthfund.org/news-and-insights/bezos-earth-fund-announces-30-million-in-ai-grand-challenge-awards |
+| emp-a-2026.html | https://climatecompatiblegrowth.com/energy-modelling-platform-for-africa-emp-a-2026/ |
+
+Snippet-only, not archived: the Google.org LF Energy grant, Open Energy Transition background, OpenMod4Africa dates, the CCAI "15 Sep 2026" deadline from an aggregator (unverified), and the Mission 300 AfDB items. Not archived because the fetch returned an error: `enaccess.org/submit/` (404, "Page not found").
