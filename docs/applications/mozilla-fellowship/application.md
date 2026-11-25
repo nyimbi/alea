@@ -6,7 +6,7 @@ Track II Independent. Answers follow the letter-of-intent form's sections. Count
 
 Power-system plans decide where grids, generators and debt go. In most African countries the models behind them are closed, spreadsheet-bound or run by foreign consultants, and the assumptions cannot be audited or questioned. ALEA is an open model I am building so that a planner in Nairobi, a regulator or a lender can see every assumption, its unit, its source and what it touches, and change one and watch the effect.
 
-The unusual part is the parameter graph at its core: 1,881 parameters and 841 equations, each typed and dimension-checked by machine, each citation recorded. It is a dependency graph, not a validated causal model, and I say so. It is also unfinished, which is why I am asking.
+The unusual part is the parameter graph at the centre: 1,881 parameters and 841 equations, each typed and dimension-checked by machine, each citation recorded. It is a dependency graph, not a validated causal model, and I say so. It is also unfinished, which is why I am asking.
 
 ## Concept note
 

@@ -1,4 +1,4 @@
-# Mozilla Foundation Fellowship 2027/2028, Track II Independent
+# Mozilla Foundation Fellowship 2027/2028 (Track II, independent)
 
 ## The grant
 
