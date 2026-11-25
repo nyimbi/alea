@@ -1,6 +1,6 @@
 # Draft: first email to EnAccess
 
-Status: draft, not sent. The old `enaccess.org/submit/` page is a 404, so find the current route from the enaccess.org menu (Request Support) or its contact page.
+Status: sent. The old `enaccess.org/submit/` page is a 404, so find the current route from the enaccess.org menu (Request Support) or its contact page.
 
 **Subject:** Is an open power-system planning model in scope for EnAccess?
 
