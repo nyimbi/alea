@@ -666,14 +666,16 @@ async def propagate(principal: AnalystDep, request: PropagateRequest) -> Propaga
 	from alea.prg.service import propagate_change
 
 	loaded = _graph()
-	if not request.changes:
+	if not request.changes and not request.do:
 		raise HTTPException(
 			status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
 			detail="`changes` is empty; a propagation with nothing to propagate "
 			"would report the parameter set back unchanged",
 		)
 	try:
-		report = propagate_change(_values(loaded, request.set), request.changes, loaded)
+		report = propagate_change(
+			_values(loaded, request.set), request.changes, loaded, do=request.do or None
+		)
 	except ValueError as exc:
 		# The graph's own refusal, carried as a 422 rather than a 500: it is a
 		# statement about the request, and its message names the equation that
@@ -685,6 +687,8 @@ async def propagate(principal: AnalystDep, request: PropagateRequest) -> Propaga
 		values=report["values"],
 		changed=report["changed"],
 		order=list(report["order"]),
+		cut=report["cut"],
+		pinned=report["pinned"],
 		loops=[
 			LoopResultOut(
 				loop=entry["loop"],

@@ -356,6 +356,14 @@ Feedback loops are collapsed into super-nodes and solved iteratively. The solver
 
 If a loop fails to converge after `max_iter` (default 20), the solver raises an error and reports the loop to the user.
 
+### Intervention: pinning a derived quantity
+
+`propagate` asks what follows from changing an input. `ParameterGraph.intervene(values, do={name: value})` asks a different question: what if a *derived* quantity were held at a value. The equation that normally fixes each pinned name is cut for that call and reported in `cut`. Every descendant is recomputed from the pinned value, and the pinned value must lie in the node's declared range. A pinned name inside a feedback loop breaks the loop, and the remaining loop equations are re-solved without it. The stored graph is never changed.
+
+Reach it as `alea prg propagate --do name=value`, a `do` field on the API request, or the Pin control on a derived node in the explorer.
+
+What it identifies: what this model's equations imply if the quantity were X. What it does not identify: a real-world causal effect. The equations are documented relationships, not estimates from interventional data, and most of them are definitions or accounting identities (`docs/research/alea-causal-model/`). Pinning a quantity the equations define says what the arithmetic gives, not what the world would do.
+
 ---
 
 ## 7. What the User Sees

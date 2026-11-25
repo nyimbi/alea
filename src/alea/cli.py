@@ -486,6 +486,17 @@ def prg_check(
 @prg_app.command("propagate")
 def prg_propagate(
 	set_: SetOption = None,
+	do: Annotated[
+		list[str] | None,
+		typer.Option(
+			"--do",
+			help=(
+				"Pin a derived parameter by hand, cutting the equation that fixes "
+				"it: --do name=value. Repeatable. Answers 'what if this were X "
+				"within the model's equations', not a real-world causal effect."
+			),
+		),
+	] = None,
 ) -> None:
 	"""Set parameters and print what the change moved."""
 	from alea.prg import load_graph
@@ -531,7 +542,38 @@ def prg_propagate(
 					err=True,
 				)
 				raise typer.Exit(code=2) from None
-		result = propagate_change(values, changes)
+		pins: dict[str, float | str] = {}
+		for pin in do or []:
+			key, _, raw = pin.partition("=")
+			if key not in graph.nodes:
+				typer.secho(
+					f"{key!r} is not a parameter in the graph", fg=typer.colors.RED, err=True
+				)
+				raise typer.Exit(code=2)
+			try:
+				pins[key] = float(raw)
+			except ValueError:
+				if graph.nodes[key].type.value != "categorical":
+					typer.secho(
+						f"{raw!r} is not a number, and {key} is declared "
+						f"{graph.nodes[key].type.value}",
+						fg=typer.colors.RED,
+						err=True,
+					)
+					raise typer.Exit(code=2) from None
+				pins[key] = raw
+		try:
+			result = propagate_change(values, changes, do=pins or None)
+		except ValueError as exc:
+			typer.secho(str(exc), fg=typer.colors.RED, err=True)
+			raise typer.Exit(code=2) from None
+		except Exception as exc:  # noqa: BLE001 - GraphError carries the refusal text
+			if pins and type(exc).__name__ == "GraphError":
+				typer.secho(str(exc), fg=typer.colors.RED, err=True)
+				raise typer.Exit(code=2) from None
+			raise
+		for eq_id in result["cut"]:
+			typer.echo(f"  cut {eq_id}")
 		for name, delta in sorted(result["changed"].items()):
 			typer.echo(f"  {name:38s} {result['values'][name]:14.6f}  ({delta:+.6f})")
 		for loop in result["loops"]:

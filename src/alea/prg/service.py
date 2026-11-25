@@ -243,8 +243,15 @@ def propagate_change(
 	values: dict[str, ParameterValue],
 	changes: dict[str, ParameterValue],
 	graph: ParameterGraph | None = None,
+	do: dict[str, ParameterValue] | None = None,
 ) -> dict[str, Any]:
-	"""Apply ``changes`` to ``values`` and report what moved."""
+	"""Apply ``changes`` to ``values`` and report what moved.
+
+	``do`` pins derived parameters by hand (:meth:`ParameterGraph.intervene`):
+	the equation that fixes each is cut and reported under ``cut``. It answers
+	"what if this quantity were X within this model's equations", not "what is
+	the real-world effect of X".
+	"""
 	g = _graph(graph)
 	unknown = set(changes) - set(g.nodes)
 	if unknown:
@@ -281,7 +288,13 @@ def propagate_change(
 	# unless something that changed reaches it. Measured 9x on this graph, and
 	# the result agrees with a full propagation to the loop solver's tolerance
 	# -- which `tests/ci` asserts rather than assumes.
-	result = g.propagate_incremental(scoped, baseline, changes)
+	if do:
+		overlap = sorted(set(do) & set(changes))
+		if overlap:
+			raise ValueError(f"{overlap} are both set and pinned; choose one")
+		result = g.intervene(scoped, do)
+	else:
+		result = g.propagate_incremental(scoped, baseline, changes)
 	# A categorical's value is a level name and has no magnitude, so a level
 	# that moved is reported as a unit step rather than dropped. Dropping it
 	# would be the defect this report exists to prevent -- a caller who changed
@@ -302,6 +315,8 @@ def propagate_change(
 		"values": result.values,
 		"changed": moved,
 		"order": list(result.order),
+		"cut": list(result.cut),
+		"pinned": dict(result.pinned),
 		# `converged` is carried even though a propagation that failed to
 		# converge raises rather than returning: a caller reading the payload
 		# cannot tell "the loop settled" from "this field was not populated"

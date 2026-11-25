@@ -22,6 +22,7 @@ from typing import Any
 
 from alea.prg import load_graph
 from alea.prg.service import propagate_change
+from alea.prg.views import Role
 
 PAGE = Path(__file__).with_name("index.html")
 MAX_BODY = 1_000_000
@@ -100,6 +101,14 @@ def graph_payload() -> dict[str, Any]:
 				"source": node.source,
 				"status": _plain(getattr(node, "status", None)),
 				"settable": bool(graph.is_settable(key)),
+				# A pin cuts the equation that fixes the node, so it is offered
+				# only where one exists: not on an input, an optimiser
+				# decision, or a tombstone.
+				"pinnable": bool(
+					not graph.is_settable(key)
+					and graph.role(key) is not Role.ENDOGENOUS
+					and getattr(node, "status", None) != "deprecated"
+				),
 			}
 		)
 	equations = []
@@ -133,10 +142,12 @@ def graph_payload() -> dict[str, Any]:
 	return {"nodes": nodes, "equations": equations, "edges": edges}
 
 
-def run_propagate(changes: dict[str, Any]) -> dict[str, Any]:
+def run_propagate(
+	changes: dict[str, Any], do: dict[str, Any] | None = None
+) -> dict[str, Any]:
 	graph = load_graph()
 	values = {k: n.default for k, n in graph.nodes.items() if n.default is not None}
-	result = propagate_change(values, changes, graph)
+	result = propagate_change(values, changes, graph, do=do or None)
 	baseline = {k: values.get(k) for k in result["values"]}
 	return {**result, "baseline": baseline}
 
@@ -199,7 +210,10 @@ class _Handler(BaseHTTPRequestHandler):
 			changes = body["changes"]
 			if not isinstance(changes, dict):
 				raise TypeError("changes must be an object")
-			self._json(200, run_propagate(changes))
+			do = body.get("do") or {}
+			if not isinstance(do, dict):
+				raise TypeError("do must be an object")
+			self._json(200, run_propagate(changes, do))
 		except Exception as exc:  # noqa: BLE001 - the page shows the graph's own refusal text
 			self._json(400, {"error": f"{type(exc).__name__}: {exc}"})
 

@@ -24,7 +24,7 @@ from __future__ import annotations
 import math
 from collections import defaultdict, deque
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -216,6 +216,12 @@ class PropagationResult:
 
 	loops: tuple[Any, ...] = ()
 	"""The feedback loops solved, with their iteration counts."""
+
+	cut: tuple[str, ...] = ()
+	"""Equation ids skipped because their output was pinned by ``intervene``."""
+
+	pinned: dict[str, ParameterValue] = field(default_factory=dict)
+	"""The values an ``intervene`` call fixed by hand, as supplied."""
 
 
 def default_prg_path() -> Path:
@@ -1316,6 +1322,71 @@ class ParameterGraph:
 		the incremental path, and the one to use when there is no previous
 		result to build on.
 		"""
+		return self._propagate(values, changed, {})
+
+	def intervene(
+		self,
+		values: Mapping[str, ParameterValue],
+		do: Mapping[str, ParameterValue],
+	) -> PropagationResult:
+		"""Pearl's ``do``: pin ``do`` by hand, cutting the equation that fixes each.
+
+		Each pinned name's determining equation is removed from the evaluation
+		for this call and reported in ``cut``; every descendant is recomputed
+		from the pinned value. A pinned name inside a feedback loop breaks the
+		loop: the remaining loop equations are re-solved without it. A name
+		with no equation (a settable input) is pinned with nothing cut, which
+		is the same as setting it.
+
+		This answers "what if this quantity were X, within this model's
+		equations". It does not identify a real-world causal effect: the
+		equations are documented relationships, not estimates from
+		interventional data. Pure: the stored graph is never mutated.
+		"""
+		unknown = set(do) - set(self._nodes)
+		if unknown:
+			raise GraphError(
+				f"intervene was asked to pin {sorted(unknown)}, which are not "
+				f"parameters of this graph"
+			)
+		for name in do:
+			equation = self._determiner.get(name) or self._loop_equation(name)
+			if equation is None:
+				continue
+			stranded = [v for v in equation.determined_variables if v not in do]
+			if stranded:
+				raise GraphError(
+					f"{name} is fixed by {equation.id!r}, which also fixes "
+					f"{stranded}; cutting it would leave those without a source. "
+					f"Pin all of {list(equation.determined_variables)} or none"
+				)
+		for name, value in do.items():
+			node = self._nodes[name]
+			if node.range is None or isinstance(value, (str, bool)):
+				continue
+			low, high = node.range
+			if not low <= value <= high:
+				raise GraphError(
+					f"cannot pin {name} to {value}: outside its declared range "
+					f"[{low}, {high}]; a do() value is a scenario value and is "
+					f"held to the same range as any other"
+				)
+		merged = {**values, **do}
+		return self._propagate(merged, set(do), dict(do))
+
+	def _loop_equation(self, parameter: str) -> Equation | None:
+		for loop in self.feedback_loops():
+			for equation in loop.equations:
+				if equation.determined_variables[0] == parameter:
+					return equation
+		return None
+
+	def _propagate(
+		self,
+		values: Mapping[str, ParameterValue],
+		changed: Iterable[str] | None,
+		pinned: Mapping[str, ParameterValue],
+	) -> PropagationResult:
 		if changed is not None:
 			unknown = set(changed) - set(self._nodes)
 			if unknown:
@@ -1360,7 +1431,14 @@ class ParameterGraph:
 
 		before = dict(scoped)
 		computable, waits_on_loop = self._phases()
+		cut: list[str] = []
+		for name in pinned:
+			equation = self._determiner.get(name) or self._loop_equation(name)
+			if equation is not None and equation.id not in cut:
+				cut.append(equation.id)
 		for parameter in computable:
+			if parameter in pinned:
+				continue
 			scoped[parameter] = self._derive(parameter, scoped)
 
 		# A loop's inputs may themselves be derived, so the loops are solved
@@ -1368,6 +1446,17 @@ class ParameterGraph:
 		# point are derived after them.
 		loop_results = []
 		for loop in self.feedback_loops():
+			if pinned and any(v in pinned for v in loop.variables):
+				kept = tuple(
+					e for e in loop.equations if e.determined_variables[0] not in pinned
+				)
+				if not kept:
+					continue
+				loop = replace(
+					loop,
+					variables=tuple(v for v in loop.variables if v not in pinned),
+					equations=kept,
+				)
 			# The solver's own mapping is numeric and its iterates are written
 			# into the mapping it is handed, so it gets a projection and the
 			# solved values are merged back. Passing `scoped` itself would work
@@ -1377,12 +1466,14 @@ class ParameterGraph:
 			loop_results.append(solve_loop(self, loop, numeric))
 			scoped.update(numeric)
 		for parameter in waits_on_loop:
+			if parameter in pinned:
+				continue
 			scoped[parameter] = self._derive(parameter, scoped)
 
 		computed = set(self._determiner) | self._loop_variables
 		moved: dict[str, float] = {}
 		for name, value in scoped.items():
-			if name not in computed:
+			if name not in computed or name in pinned:
 				continue
 			# A loop variable has no value in `before` unless the caller
 			# supplied one: `solve_loop` seeds it from the node's `initial` or
@@ -1420,6 +1511,8 @@ class ParameterGraph:
 			changed=moved,
 			order=self.order(),
 			loops=tuple(loop_results),
+			cut=tuple(cut),
+			pinned=dict(pinned),
 		)
 
 	def propagate_incremental(

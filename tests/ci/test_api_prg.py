@@ -1079,3 +1079,24 @@ def test_the_summary_serves_the_catalog_join(
 	assert "equity_return_target" in joined, sorted(joined)
 	assert joined["equity_return_target"]["agrees"] is False
 	assert catalog["status_disagreements"], "the drift is not named"
+
+
+def test_the_propagate_route_serves_do_and_names_the_cut_equation(
+	prg_client: TestClient, analyst_key: dict[str, str]
+) -> None:
+	response = prg_client.post(
+		"/api/v1/prg/propagate",
+		json={"set": {}, "changes": {}, "do": {"additional_abatement_mtco2": 30.0}},
+		headers=analyst_key,
+	)
+	assert response.status_code == 200, response.text
+	body = response.json()
+	assert body["cut"] == ["additional_abatement_definition"]
+	assert body["pinned"] == {"additional_abatement_mtco2": 30.0}
+	assert body["values"]["additional_abatement_mtco2"] == 30.0
+	out_of_range = prg_client.post(
+		"/api/v1/prg/propagate",
+		json={"do": {"additional_abatement_mtco2": 136.0}},
+		headers=analyst_key,
+	)
+	assert out_of_range.status_code == 422, out_of_range.text

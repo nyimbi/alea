@@ -77,3 +77,23 @@ def test_saved_sets_round_trip_persist_and_refuse_what_propagate_refuses(tmp_pat
 	finally:
 		server.shutdown()
 		server.server_close()
+
+
+def test_explorer_offers_pin_only_on_derived_nodes_and_runs_do(tmp_path):
+	graph = load_graph()
+	server = make_server(0, tmp_path / "sets.json")
+	threading.Thread(target=server.serve_forever, daemon=True).start()
+	base = f"http://127.0.0.1:{server.server_address[1]}"
+	try:
+		_, payload = _call(base, "/api/graph")
+		nodes = {n["id"]: n for n in payload["nodes"]}
+		assert nodes["additional_abatement_mtco2"]["pinnable"] is True
+		assert nodes["total_capacity_mw"]["pinnable"] is False
+		assert all(not n["pinnable"] for n in nodes.values() if n["settable"])
+		status, got = _call(base, "/api/propagate", {"changes": {}, "do": {"additional_abatement_mtco2": 30.0}})
+		assert status == 200 and got["cut"] == ["additional_abatement_definition"], got
+		assert got["values"]["additional_abatement_mtco2"] == 30.0
+		status, err = _call(base, "/api/propagate", {"changes": {}, "do": {"additional_abatement_mtco2": 136.0}})
+		assert status == 400 and "outside its declared range" in err["error"]
+	finally:
+		server.shutdown()

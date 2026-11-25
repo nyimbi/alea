@@ -1602,6 +1602,12 @@ class PropagateRequest(ApiModel):
 
 	set: dict[str, float | str] = Field(default_factory=dict)
 	changes: dict[str, float | str] = Field(default_factory=dict)
+	do: dict[str, float | str] = Field(default_factory=dict)
+	"""Derived parameters to pin by hand. The equation that fixes each is cut.
+
+	Answers "what if this were X within this model's equations"; it does not
+	identify a real-world causal effect.
+	"""
 
 
 class PropagationOut(ApiModel):
@@ -1611,6 +1617,8 @@ class PropagationOut(ApiModel):
 	changed: dict[str, float]
 	order: list[str]
 	loops: list[LoopResultOut]
+	cut: list[str] = Field(default_factory=list)
+	pinned: dict[str, float | str] = Field(default_factory=dict)
 
 
 class LoopResultOut(ApiModel):

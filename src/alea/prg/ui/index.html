@@ -81,7 +81,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let G=null,nodes=new Map(),eqs=new Map(),up=new Map(),down=new Map(),eqOf=new Map(),eqUses=new Map();
 let groupBy="category",view="node",openCats=new Set(),onlySet=false,TG=new Map();
-let changes={},result=null,shown=200,cur=null,allEq=false;
+let changes={},pins={},result=null,shown=200,cur=null,allEq=false;
 
 function fmt(v){if(v===null||v===undefined)return"–";if(typeof v==="string")return esc(v);
  const a=Math.abs(v);if(a!==0&&(a>=1e7||a<1e-4))return v.toExponential(4);return String(+v.toPrecision(7));}
@@ -212,15 +212,17 @@ function renderAdjust(){
  const n=cur?nodes.get(cur):null;
  let h="<h3 style='margin-top:0'>What-if</h3>";
  if(n){
-  if(!n.settable)h+=`<p class="mute">${esc(n.id)} is computed by the graph; set one of its inputs instead.</p>`;
+  if(!n.settable)h+=`<p class="mute">${esc(n.id)} is computed by the graph; set one of its inputs instead.</p>`+(n.pinnable?`<div class="row"><code>${esc(n.id)}</code><input id="pinval" type="number" step="any" value="${n.default??""}"><button id="pin">Pin</button></div><div class="mute">Pinning cuts the equation that computes it and holds this value. It answers "what if this were X within the model's equations", not a real-world effect.</div>`:"");
   else{
    const cat=n.categories.length;
    h+=`<div class="row"><code>${esc(n.id)}</code>${cat?`<select id="val">${n.categories.map(c=>`<option>${esc(c)}</option>`).join("")}</select>`:`<input id="val" type="number" step="any" value="${n.default??""}">`}<button id="add">Set</button></div><div class="mute">default ${fmt(n.default)} ${esc(n.unit||"")}</div>`;
   }
  }
+ const pk=Object.keys(pins);
+ h+=pk.length?`<h3>Pinned (${pk.length})</h3>`+pk.map(k=>`<div class="row"><a class="n" data-n="${esc(k)}">${esc(k)}</a><code>${fmt(pins[k])}</code><span class="tag">do</span><button data-unpin="${esc(k)}">×</button></div>`).join(""):"";
  const keys=Object.keys(changes);
  h+=`<h3>Changes (${keys.length})</h3>`+(keys.map(k=>`<div class="row"><a class="n" data-n="${esc(k)}">${esc(k)}</a><code>${fmt(changes[k])}</code><button data-rm="${esc(k)}">×</button></div>`).join("")||'<p class="mute">None yet.</p>');
- h+=`<div class="row"><button class="primary" id="run"${keys.length?"":" disabled"}>Propagate</button><button id="clear"${keys.length?"":" disabled"}>Clear</button></div>`;
+ h+=`<div class="row"><button class="primary" id="run"${keys.length||pk.length?"":" disabled"}>Propagate</button><button id="clear"${keys.length||pk.length?"":" disabled"}>Clear</button></div>`;
  if(result){
   if(result.error)h+=`<p class="err">${esc(result.error)}</p>`;
   else{
@@ -263,7 +265,7 @@ function cascade(){
  return h;
 }
 async function run(){
- try{const r=await fetch("/api/propagate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({changes})});
+ try{const r=await fetch("/api/propagate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({changes,do:pins})});
   result=await r.json();}catch(e){result={error:String(e)};}
  renderAdjust();
 }
@@ -277,9 +279,11 @@ document.addEventListener("click",ev=>{
  if(ev.target.id==="more"){shown+=200;renderList();}
  if(ev.target.id==="add"){const n=nodes.get(cur),v=$("#val").value;
   if(n.categories.length)changes[cur]=v;else if(v!==""&&isFinite(+v))changes[cur]=+v;renderAdjust();}
+ if(ev.target.id==="pin"){const v=$("#pinval").value;if(v!==""&&isFinite(+v)){pins[cur]=+v;renderAdjust();}}
+ if(ev.target.dataset.unpin){delete pins[ev.target.dataset.unpin];result=null;refresh();}
  if(ev.target.dataset.rm){delete changes[ev.target.dataset.rm];result=null;refresh();}
  if(ev.target.id==="run")run();
- if(ev.target.id==="clear"){changes={};result=null;refresh();}
+ if(ev.target.id==="clear"){changes={};pins={};result=null;refresh();}
 });
 const filt=()=>{shown=200;renderList();if(view==="table")renderTable();};
 $("#q").addEventListener("input",filt);$("#cat").addEventListener("change",filt);$("#role").addEventListener("change",filt);
