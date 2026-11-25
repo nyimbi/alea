@@ -2,6 +2,8 @@
 
 Written 2026-11-25. Extends `README.md` in this directory, which assessed the narrower thesis against what the code does today. This document argues from the goal, not from the current state. Where a claim rests on an unverified premise it is marked **[premise]**, and section 7 lists what would falsify each.
 
+> **Correction, same day.** The project already has a competitive survey, `docs/spec/competition-eval.md`, which I had not read when I wrote this. It finds PyPSA-Earth, AETOS (48 African countries) and Calliope Africa already provide open continental models and data, and calls PyPSA-Earth's pipeline validated for the whole continent. So "no open, comparable continental evidence base exists" is false as stated, and coverage is not ALEA's differentiator. What the survey does not address is data-centre hosting, per-field provenance with archived sources, or dimension-checked equations. Read sections 2, 4 and 9 with that in mind; the premise in step 2 is withdrawn and the differentiator is provenance, units and the hosting check, built on PyPSA-Earth's data. The survey is also a self-assessment that grades ALEA "Strong" to "Pioneering" on capabilities its own defect register shows are not yet met, so treat its gradings with the caution that register implies.
+
 ## 1. The goal, stated apart from where ALEA is
 
 **End state.** For every African country, an open, versioned, cited country pack (demand, generation fleet, network, weather years, tariffs, outage history, each with provenance and licence) feeding one open, unit-checked, tested model. Any party can ask the same question of any country and get an answer whose assumptions they can read: "can this system host this load, at what cost to others, what must be built first, how sure are we?"
