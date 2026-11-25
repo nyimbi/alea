@@ -8,10 +8,10 @@ The stipend pays for my time, not for line items. Planned allocation of the year
 
 | Area | Share | Work |
 |---|---|---|
-| Data acquisition | 15% | Archive every cited source; Kenya and second-country weather-year profiles (ERA5, atlite) and grid topology (OSM), with provenance |
+| Data acquisition | 15% | Archive every cited source; Kenya weather-year profiles (ERA5, atlite) and grid topology (OSM), with provenance |
 | System development | 45% | Refuse hand-set derived values and unknown names; intervention operator; default scenario passes its own check; solver coupling above the 7.4% baseline; type and lint clean |
 | Research | 25% | Full-year Kenya solve; check the 10 unverified claims; sensitivity report; user sessions with two African planners |
-| Outreach and hand-off | 15% | Verification template and playbook; second-country case; hand-off to a maintaining institution |
+| Outreach and hand-off | 15% | Verification template and playbook; test of the template on a second unrelated codebase; hand-off to a maintaining institution |
 
 ## Project budget: US$25,000
 
@@ -19,7 +19,7 @@ The stipend pays for my time, not for line items. Planned allocation of the year
 |---|---|---|
 | Cloud compute for weather processing and long solves | 4,000 | Data acquisition and research |
 | Access to paywalled cited sources | 1,500 | Data acquisition |
-| Local-data purchase or licences for the second country (grid and demand) | 3,000 | Data acquisition |
+| Kenyan grid and demand data purchase or licences | 3,000 | Data acquisition |
 | Hosting and storage for datasets and the public graph | 1,500 | System development |
 | Travel for two planner sessions and one community convening in Africa | 7,000 | Research |
 | Independent reviewer honorarium for the equations and sources | 4,000 | Research |
