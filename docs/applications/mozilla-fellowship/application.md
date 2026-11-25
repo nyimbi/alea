@@ -49,20 +49,17 @@ Primary issue area: **Hard infrastructure: compute, energy, quantum, and the ext
 
 **Project stage.** Working prototype.
 
-**Impact beyond your wildest imagination.** If it works, power planning across Africa becomes something the people affected can check. What changes for each user:
-- **A ministry or utility planner** stops inheriting a consultant's model they cannot open. They change one assumption, see what else moves, and see where each number came from, without commissioning a new study.
-- **A lender or development bank** asks for the assumptions graph with every plan, the way it asks for audited accounts, and can ask "what if this is wrong?" and get an answer it can verify.
-- **A government negotiating a data-centre or industrial load** can see, before signing, whether its grid can carry the load at the evening peak, and what it would cost others. That is the check Kenya lacked at the May 2024 announcement.
-- **A journalist or civil-society group** can test an announced plant, tariff or data centre against the grid's headroom and reliability, and publish the working.
-- **A citizen or small business**, who pays the bills and taxes that follow these plans, gets planning assumptions that can be questioned in public and, later, outage forecasts they can use. The second part is an aim, not a result.
-- **A modeller or student** gets a cited, unit-checked parameter set and open data they can reuse in any country.
+**Impact beyond your wildest imagination.** If it works, the people affected by African power decisions can check them.
+- **Planners** stop inheriting models they cannot open. They change one assumption and see what moves and where each number came from.
+- **Lenders** ask for the assumptions graph with every plan, as they ask for audited accounts.
+- **Governments weighing a data-centre load** see before signing whether the grid can carry it at peak. Kenya lacked that check in May 2024.
+- **Journalists and civil society** test announced projects against grid headroom and publish the working.
+- **Citizens and small businesses**, who pay for these plans, can question the assumptions in public. Outage forecasts are an aim, not a result.
+- **Modellers and students** reuse a cited, unit-checked parameter set.
 
-At scale, one open schema covers every African country, so a decision in one country can be compared with its neighbours'. The same discipline spreads to other AI-written technical software.
+One open schema across African countries lets neighbouring decisions be compared.
 
-**Disruption.** The aim is to change what counts as evidence for a power decision, in three ways.
-1. **From a report only its author can rerun to a model anyone can rerun and challenge.** Closed, one-off consultancy models lose their main advantage, that nobody can check the assumptions. Consultants can build on an open model, but they cannot hide behind one.
-2. **From announcement to checkable claim.** An MoU for a gigawatt of compute costs nothing to announce. A published, cited feasibility check can be wrong in public, so a claim has to meet a standard of proof.
-3. **From "the tests pass" to "this claim is verified, produced or labelled unverified".** Green test suites are treated as proof of correctness, which is a risk when AI writes the software. The project's canaries and unverified-claim register show a way to do better.
+**Disruption.** It changes what counts as evidence for a power decision: from a report only its author can rerun to a model anyone can challenge; from a costless announcement to a claim with a standard of proof; from "the tests pass" to claims labelled verified or unverified.
 
 **Quarterly milestones (June 2027 to May 2028).**
 - Q1, Jun to Aug 2027: a check of what PyPSA-Earth, AETOS and Calliope Africa already offer for data-centre hosting, and two or more planner conversations, published whatever they show; a Kenya baseline from EPRA figures; the model refuses what it cannot honour (a hand-set derived value, an unknown name); the default scenario passes its own check; all 43 unarchived sources saved with checksums; Kenya weather-year and grid datasets published with provenance; two African planners recruited.
