@@ -40,3 +40,11 @@ Snippet-only (no copy): Horizon topic deadlines, Energy Catalyst R11 terms, LEAP
 | github-secure-oss-fund.html | https://github.com/open-source/github-secure-open-source-fund | rolling, security focus |
 | befellows-faq.html | https://befellows.smapply.org/res/p/FAQ/ | 2027 concept papers closed 2 Nov 2026 |
 | tef-2027.html | https://allbusiness.africa/programs/tef-entrepreneurship-2027 | aggregator; 31 Mar 2027 unconfirmed |
+
+### Third sweep, applications round (2026-11-25)
+
+| File | Source | Note |
+|---|---|---|
+| `third-sweep/mozilla-fellowship-loi.html` (+ `.txt`) | https://mzl.la/fellowshipsLOI | Letter-of-intent form, read in full. Dates, tracks, issue areas, questions |
+| `third-sweep/mozilla-fellowship-2027-b.html` | mozillafoundation.org call page | 403 error page. Not evidence |
+| `third-sweep/rsc-fund-faq.html`, `rsc-fund-what-we-fund.html`, `rsc-fund-why.html`, `rsc-fund-home.html`, `rsc-fund-apply.md` (+ `.txt`) | researchsoftwarecatalyst.fund | Eligibility, exclusions, licences, budget rules |
