@@ -19,6 +19,26 @@ MIT licence, open platform, 55 AU member states and five power pools, long-run p
 | AfDB SEFA | African energy; pre-investment | 2026 call was green hydrogen only, closed 11 May 2026. Not a fit for a software platform | sefaafrica.org |
 | Mission 300 (World Bank, AfDB, Rockefeller, GEAPP, SEforALL) | ALEA's planning outputs serve electrification planning | No grant call found. Partner route, not an application | afdb.org; rockefellerfoundation.org |
 
+## Terra Viva energy and climate category (pages 1 to 3 of 81, read 2026-11-25)
+
+Thirty listings, 10 per page. Archived as `sources/terraviva-category-energy-climate-p{1,2,3}.html`. Pages 4 to 81 were not read. Only listings with a deadline after 25 Nov 2026, or none, are worth a look, and I read the listing text for the four that looked closest.
+
+| Listing | Amount | Deadline | Fit for ALEA |
+|---|---|---|---|
+| Keeling Curve Prize | US$50k a year shared among up to 10 winners | 15 Jan 2027 | Possible, small. Open to individuals and worldwide; accepts "a concept, a plan, a product, a technology, or a strategy" for clean-energy solutions. But it asks for active projects that cut CO2 or raise uptake, and ALEA is a planning tool, so the case must be made indirectly. Each winner's share is at most about US$5k if split evenly (my arithmetic, not stated) |
+| IKI Small Grants (German government) | EUR 60k to 200k | 8 Jan 2027 | Poor. Scheme focus is biodiversity loss linked to climate change; non-profits only |
+| IKI Medium Grants | EUR 300k to 800k, 2 to 3 years | 12 Jan 2027 (outlines) | Poor on scope (biodiversity). Also needs a German non-profit or academic lead with local partners in aid-eligible countries |
+| CTI PFAN | US$1M to 50M per project | rolling | Poor. Finances clean-energy projects and ventures, not software |
+| EnAccess | see above | rolling, disputed | Already tracked |
+| Green Climate Fund Enhancing Direct Access | pilot-level US$200M | none | No. Accredited direct-access institutions only |
+| HCLTech climate awards | US$500k plus three at US$250k | 24 Jan 2027 | No. NGOs registered 3+ years in one of 24 listed countries |
+| Climate Intervention Environmental Impact Fund | US$75k request | 1 Dec 2026 | No. Climate-intervention technologies near field testing |
+| People Powered Climate Democracy Accelerator | US$10k | 27 Nov 2026 | No. Democracy and participation focus |
+
+Closed before today and relevant by topic, useful as the pattern of what recurs: Global Energy Alliance energy access (Latin America only), Next Einstein Forum and Nigeria Energy Forum energy innovation challenges (ages 18 to 35, teams), EPIC Deploy cooling pilots (Kenya among five countries; consortium; closed 31 Oct), Global Innovation Lab for Climate Finance (closed 18 Oct), Climate and Clean Air Coalition accelerator (closed 14 Aug).
+
+Reading: the category shows no call for energy planning software or open models. What recurs is project finance, youth challenges, journalism grants and biodiversity-linked climate money. That matches the earlier finding that ALEA's best routes are a partner or a foundation approach, not an open call.
+
 ## Not funders, but routes in
 
 - Open Energy Transition (PyPSA developers): no call found; a partner, since ALEA builds on PyPSA. Ask about joint proposals.
@@ -53,6 +73,8 @@ MIT licence, open platform, 55 AU member states and five power pools, long-run p
 | sefa-green-hydrogen-call-2026.html | https://news.fundsforngos.org/2026/04/09/afdb-launches-green-hydrogen-grant-programme-in-africa/ (aggregator, not the SEFA page) |
 | rockefeller-mission300-accelerator.html | https://www.rockefellerfoundation.org/news/rockefeller-foundation-mission-300-launch-test-ai-demand-finance-energy-access-africa/ |
 | bezos-earth-fund-ai-grand-challenge.html | https://www.bezosearthfund.org/news-and-insights/bezos-earth-fund-announces-30-million-in-ai-grand-challenge-awards |
+| terraviva-category-energy-climate-p1.html, p2, p3 | https://www.terravivagrants.org/category/energy-climate-change/ (and /page/2/, /page/3/) |
+| terraviva-iki-small-grants.html, terraviva-iki-medium-grants.html, terraviva-pfan.html, terraviva-keeling-curve-prize.html | listing pages at terravivagrants.org (slugs: international-climate-initiative-small-grants, iki-medium-grants, pfan-funding-for-climate-clean-energy-projects, keeling-curve-prize) |
 | emp-a-2026.html | https://climatecompatiblegrowth.com/energy-modelling-platform-for-africa-emp-a-2026/ |
 
 Snippet-only, not archived: the Google.org LF Energy grant, Open Energy Transition background, OpenMod4Africa dates, the CCAI "15 Sep 2026" deadline from an aggregator (unverified), and the Mission 300 AfDB items. Not archived because the fetch returned an error: `enaccess.org/submit/` (404, "Page not found").
