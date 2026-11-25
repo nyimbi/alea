@@ -83,7 +83,12 @@ I have spent 30 years building national-scale technology in Africa, mostly publi
 
 I am CEO and CTO of datacraft.co.ke, which builds platforms for African telecom, finance and public agencies. ALEA is separate from Datacraft's customers and its books are kept apart.
 
-**Technical expertise.** Python (FastAPI), Go, Rust, TypeScript, C and C++; PostgreSQL and PostGIS; Bayesian modelling and machine learning; AWS, Kubernetes and Terraform; security to ISO 27001 and NIST 800-53. For ALEA: PyPSA, linopy and HiGHS, quality-gate design (canaries that prove a check can fail), and working with AI coding assistants while verifying their output. B.Sc. Theoretical Physics, University of Nairobi; Executive Certificate, MIT Sloan.
+**Technical expertise.**
+- **Management:** led engineering teams of 120+ across Africa, a 12-month group turnaround as managing director, and enterprise product portfolios.
+- **Research:** B.Sc. Theoretical Physics, published physics and computing papers, and agent-based policy simulation for government and NGO clients.
+- **System design and large systems:** national registers, court systems and a hyperscale data-centre design, built for constraints such as offline capture at 120,000 polling units.
+- **Government liaison and negotiation:** advised Kenya's Ministry of ICT and Judiciary, won coalition support for a national rollout, and negotiated against large vendors.
+- **Technical skills:** Python (FastAPI), Go, Rust, TypeScript, C and C++; PostgreSQL and PostGIS; Bayesian modelling and machine learning; AWS, Kubernetes, Terraform; ISO 27001 and NIST 800-53. For ALEA: PyPSA, linopy, HiGHS, quality-gate design, and verifying AI-written code.
 
 **Your role in the field at the end of the year.** The person African planners and open-energy modellers turn to for an auditable model of their grid; the author of the first public account of verifying AI-written technical software in a real energy model, defects included; and the maintainer who has handed the model to an institution that will keep it alive. What has changed because of the work: assumptions behind one country's plan can be inspected by anyone, and the method is reusable.
 
