@@ -21,7 +21,8 @@ I have lived it. ALEA was written largely with an AI assistant. ALEA's quality p
 - a link checker that matched one spelling of a link and passed 15 dead ones;
 - a table of seven emission factors in which three were combustion-only and four were whole-lifecycle values, so the numbers were not comparable;
 - a default scenario that fails its own validity check (a frequency nadir of 43.6 Hz against a declared range of 45 to 50 Hz);
-- 7.4% of the model's settable parameters (81 of 1,095) reaching the solver, so most dials a user could turn changed nothing in the result.
+- 7.4% of the model's settable parameters (81 of 1,095) reaching the solver, so most dials a user could turn changed nothing in the result;
+- a data-centre load that raised demand by 16.3 TWh on a generic baseline that is not Kenya, while a headroom figure fell below 1 and no reliability output moved: a plausible-looking answer to a question the model cannot yet answer.
 
 The pattern is the same each time: **a check that has never been seen to fail is a check that may not be running.** Model-written code is especially prone to it, because the model writes the code and the check, and both can share the same blind spot.
 
@@ -72,6 +73,10 @@ The four checks are written for ALEA today. The work in this grant is to remove 
 1,881 parameters and 841 equations over 17 systems; 841 of 841 equations pass the dimension checker, 3 by written exemption. 1,656 tests; 142 of 142 promised gates have a test and a canary. 108 citations registered, 39 archived. Defects: a hand-set derived parameter silently discarded; unknown names accepted; the default scenario failing its own check; 81 of 1,095 settable parameters reaching the solver; no full-year Kenya solve (optimal on windows up to 91 days); 10 claims on the unverified register, all unverified.
 
 The graph is a dependency graph, not a validated causal model. This grant does not change that.
+
+## Why the worked example is worth hardening
+
+ALEA's use case has a public stake. In May 2026 Semafor reported that Microsoft and G42's US$1 billion Kenyan data centre was unlikely to proceed, with the president saying it would need about a third of the country's installed capacity. The regulator's 2024 figures show a 2,288 MW peak against 3,082 MW effective capacity. Whether a grid can host a compute load is a question a checkable model should answer in public, before an announcement. ALEA cannot answer it yet: data-centre load enters as annual energy on a generic baseline, there is no peak check, and reliability does not respond to reserve falling. I state this because a model that looks authoritative and is not is the exact failure this grant studies. The grant does not build the hosting test. It builds the verification layer a hosting test would need to be trusted, and the Kenya fixes it funds are its base. I have not surveyed what open African grid data already exists, so I make no claim that none does.
 
 ## How it connects to community priorities
 

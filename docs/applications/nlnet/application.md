@@ -10,6 +10,8 @@ Paste-ready. Each answer under "Form answers" is within NLnet's character limit 
 
 **What it is not.** It is a dependency graph. It is not a validated causal model, and nothing in this proposal claims it is.
 
+**Why it matters now.** Compute for AI is sized in megawatts at a grid node, so power decides where it can go. In May 2024 Microsoft and G42 announced a US$1 billion geothermal data centre at Olkaria, Kenya. In May 2026 Semafor reported it unlikely to proceed: President Ruto said it would need about a third of Kenya's roughly 3,000 MW of installed capacity. The regulator's own figures (EPRA, 2024) show a 2,288 MW peak against 3,082 MW effective capacity. The arithmetic was not public when the announcement was made. The use case I am building towards is a public check of whether a power system can host a proposed load, at the evening peak, at what cost to others and with what uncertainty. That check does not exist in ALEA yet (see the last defect below), and the grant finishes the base it needs. The longer aim is open, sourced data packs for more African countries, after Kenya meets its gates. I have not yet surveyed what open African grid data already exists, so I do not claim there is none.
+
 **Why it needs this grant.** The graph has defects I can measure, and they are the kind that make a model untrustworthy while it looks finished:
 
 | Defect | Measured today | Consequence |
@@ -21,6 +23,7 @@ Paste-ready. Each answer under "Form answers" is within NLnet's character limit 
 | No full-year Kenya solve | optimal on windows up to 91 days | the headline planning claim is not yet shown |
 | Sources not archived | 43 of 108 citations have no local copy | links rot and a number cannot be re-checked |
 | Unverified claims | 10 on the project's own register, all unverified | published claims outrun evidence |
+| Data-centre load is energy only, on a generic baseline | a 1,000 MW IT load raises demand 16.3 TWh on a default of about 47 TWh, which is not Kenya (EPRA's half-year 7.2 TWh annualises to about 14); no peak check; reliability does not respond to headroom | the model cannot yet say whether a grid can host a load, so it must not be quoted as doing so |
 
 **What the money buys, and how you will know.** Every item has a command that prints a number before and after.
 
@@ -71,7 +74,7 @@ ALEA PRG: an open, cited, dimension-checked parameter graph for power-system pla
 https://github.com/nyimbi/alea
 
 ### Summary (max 1000 characters)
-ALEA is an MIT-licensed model for planning African power systems. Its core is a graph of 1,881 parameters and 841 equations. Every assumption has a unit, range and source, and a machine checks that each equation is dimensionally consistent. A planner changes one dial, such as a discount rate or a build cost, and sees which quantities move. It is a dependency graph, not a validated causal model. It also has measurable defects: a hand-set derived value is silently discarded, the default scenario fails its own check, and only 81 of 1,095 settable parameters (7.4%) reach the optimiser, so most dials change nothing. This grant fixes these, archives the 43 cited sources not yet saved, publishes open Kenya weather and grid datasets with provenance, and attempts the first full-year Kenya solve. Output: a tagged release, datasets, and a public report with before and after numbers, including what stays unverified.
+ALEA is an MIT-licensed model for planning African power systems. Its core is a graph of 1,881 parameters and 841 equations. Every assumption has a unit, range and source, and a machine checks that each equation is dimensionally consistent. A planner changes one dial and sees what moves. It is a dependency graph, not a validated causal model. It also has measurable defects: a hand-set derived value is silently discarded, the default scenario fails its own check, and only 81 of 1,095 settable parameters (7.4%) reach the optimiser, so most dials change nothing. This grant fixes these, archives the 43 cited sources not yet saved, publishes open Kenya weather and grid datasets with provenance, and attempts the first full-year Kenya solve, the base for testing whether a grid can host a data centre. Output: a tagged release, datasets, and a public report with before and after numbers, including what stays unverified.
 
 ### Amount requested (EUR)
 37500
@@ -129,12 +132,16 @@ Contributing instead: I considered it. The optimiser communities are the right p
 
 7. Honesty about what was verified. For paywalled sources I archive the landing page and abstract and mark them abstract-only; I do not claim to have read content I did not.
 
+8. Hosting a load is a peak and network question. Data-centre load enters today as annual energy on a generic baseline. Testing whether a grid can host it needs a Kenya baseline, a load shape and a reserve check against effective capacity first. Siting needs a network and the full-year solve, so I treat it as later work and do not promise it.
+
 ### Ecosystem and engagement (max 2000 characters)
 Depends on: PyPSA and linopy (model and solver interface), HiGHS (solver), atlite and ERA5 (weather data), OpenStreetMap (grid), PyPSA technology-data (costs), Zenodo (archiving). Upstream issues for data errors I find go to those projects.
 
 Main users: energy-planning analysts in African ministries, regulators and utilities; lenders and civil-society groups who need to check a plan's assumptions; academic energy modellers who want a cited parameter set; open-energy-modelling researchers who want to compare structures.
 
 Engagement: publish the graph, datasets and report on Zenodo and GitHub; open upstream issues with evidence; present the Kenya case to the open energy modelling community; ask two African planners to run the model and tell me what they cannot see or trust, and record their answer. I list no partner as committed until they have agreed.
+
+Beyond Kenya, I aim to publish open, sourced country data packs under a shared schema, one country at a time, only after Kenya passes its gates. I will first survey existing open African grid data and ask planners what they already have, and will report that survey whether or not it favours this project.
 
 ### Why this applicant (max 2000 characters)
 I am Nyimbi Odero, a software developer in Kenya and the founder of datacraft.co.ke, a registered Kenyan software company. I started ALEA on 11 October 2026 and have written it as a single maintainer since, with 371 commits, 1,656 tests and 142 quality gates. I know the problem as a Kenyan practitioner: the data and assumptions behind African grid plans are hard to reach. I applied as an individual because the work is public-interest and the code is MIT. The project's record includes defects I found in my own work and the gates built to catch them; the full list is in docs/plans/15-completion.md, written before applying, and I would rather the reviewer read it than discover it.

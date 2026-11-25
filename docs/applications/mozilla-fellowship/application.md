@@ -16,7 +16,9 @@ Track II Independent. Answers follow the letter-of-intent form (https://mzl.la/f
 - To the open-source energy community: a cited, dimension-checked parameter graph and open Kenya datasets, reusable far beyond Kenya.
 - To the AI-and-software community: a worked example of how to verify AI-written technical software, with the defects and the checks that caught them.
 
-**Not claimed.** The graph is a dependency graph, not a validated causal model. Only 7.4% of settable parameters currently reach the optimiser. There is no full-year Kenya solve yet.
+**Why now, and why this issue area.** Compute for AI is sized in megawatts at a grid node, so power decides where it can go. Microsoft and G42's US$1 billion Kenyan data centre was reported in May 2026 (Semafor) as unlikely to proceed, with the president saying it would need about a third of installed capacity. The regulator's 2024 figures show a 2,288 MW peak against 3,082 MW effective capacity. That arithmetic was not public at the announcement. The use case ALEA is built towards is a public check of whether a grid can host a proposed load, at the evening peak, at what cost to others, with what uncertainty. Countries that can run that check can negotiate compute deals from facts. That removes one obstacle to African compute sovereignty, not all of them: chips, capital, talent and law are separate.
+
+**Not claimed.** The graph is a dependency graph, not a validated causal model. Only 7.4% of settable parameters currently reach the optimiser. There is no full-year Kenya solve yet. It cannot yet test data-centre hosting: load enters as annual energy on a generic baseline, not Kenya, with no peak or network check. Coverage of other countries is an aim, not a promise.
 
 ## Section 1: Applicant information
 
@@ -52,8 +54,8 @@ Primary issue area: **Hard infrastructure: compute, energy, quantum, and the ext
 **Disruption.** Closed consultancy models and any vendor whose value is that nobody can check the assumptions. Also the habit of treating a green test suite as proof of correctness.
 
 **Quarterly milestones (June 2027 to May 2028).**
-- Q1, Jun to Aug 2027: the model refuses what it cannot honour (a hand-set derived value, an unknown name); the default scenario passes its own check; all 43 unarchived sources saved with checksums; Kenya weather-year and grid datasets published with provenance; two African planners recruited.
-- Q2, Sep to Nov 2027: an intervention operator ("what if this quantity were X, within the model's equations"); every one of 1,095 settable parameters classified as reaching the optimiser or not, each "no" justified; first full-year Kenya solve with solve time and gap reported.
+- Q1, Jun to Aug 2027: a survey of existing open African grid data and two or more planner conversations, published whatever they show; a Kenya baseline from EPRA figures; the model refuses what it cannot honour (a hand-set derived value, an unknown name); the default scenario passes its own check; all 43 unarchived sources saved with checksums; Kenya weather-year and grid datasets published with provenance; two African planners recruited.
+- Q2, Sep to Nov 2027: a data-centre load with a peak shape, checked against effective capacity, so reliability worsens when headroom falls; a country-data-pack schema and readiness tiers; an intervention operator ("what if this quantity were X, within the model's equations"); every one of 1,095 settable parameters classified as reaching the optimiser or not, each "no" justified; first full-year Kenya solve with solve time and gap reported.
 - Q3, Dec 2027 to Feb 2028: the 10 unverified claims each produced or withdrawn with evidence; planner sessions held and findings published; sensitivity report on which assumptions drive the plan.
 - Q4, Mar to May 2028: a verification template and playbook extracted from the project, tested on a second unrelated codebase; handover plan naming a maintaining institution; final report with before and after numbers.
 Subject to revision with Mozilla.
@@ -97,4 +99,5 @@ Previous engagement with Mozilla, MozFest or the community: [ yes or no, and how
 - That the graph is causal.
 - That the model is validated against Kenyan operations.
 - That a claim is verified before its artefact exists.
+- That ALEA predicts the effects of data centres, fully maps any grid, or covers every African country. Say it tests whether a modelled system can host a load, under stated assumptions, with ranges.
 - That the US$100,000 stipend, US$25,000 project budget or any 501(c)(3) condition is confirmed, until you have read the RFP.
