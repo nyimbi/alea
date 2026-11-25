@@ -1,0 +1,2776 @@
+BIANNUAL
+ENERGY & PETROLEUM
+STATISTICS REPORT
+FINANCIAL YEAR 2024/2025
+    ABOUT THIS REPORT
+    This report provides key statistics on the performance of the electricity, petroleum, and renewable energy subsectors
+    during the first half of the financial year 2024/2025.
+    This report and the material herein are provided “as is”. All reasonable precautions have been taken by EPRA to verify
+    the reliability of the material in this publication. However, neither EPRA or other third-party content providers provides a
+    warranty of any kind, either expressed or implied, and they accept no responsibility or liability for any consequence of use
+    of the publication or material herein.
+    Unless otherwise stated, material in this publication may be freely used, shared, copied, reproduced, printed and/or
+    stored, provided that appropriate acknowledgment is given of EPRA as the source and copyright holder. Material in this
+    publication that is attributed to third parties may be subject to separate terms of use and restrictions, and appropriate
+    permissions from these third parties may need to be secured before any use of such material.
+    For further information or to provide feedback, please contact EPRA through statistics@epra.go.ke.
+
+
+
+
+i
+
+
+
+
+    BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+ACKNOWLEDGEMENTS
+This report has been compiled by the EPRA Statistics Committee, comprised of the individuals listed below.
+
+1. Njoki Karanja
+2. Newtone Munyolo
+3. Ronald Ketter
+4. Moses Akuno
+5. Allan Wairimu
+6. Lee Okombe
+7. Peter Kirukmet
+8. Hassid Okumu
+9. Gladys Njoroge
+10. Ruth Rono
+11. Kenneth Bullut
+12. Ian Bett
+13. Allan Gisanga
+
+This report has greatly benefited from the valuable insights and support of the Board of Directors, the Director General,
+the Director Economic Regulation & Strategy, the Senior Management team, and staff members.
+
+
+                                                                                                                                        ii
+
+
+
+
+                                                               BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+      IN THIS REPORT
+
+
+                        BIANNUAL PERFORMANCE
+             x          OVERVIEW
+
+
+                                                                                          INTRODUCTION   1
+
+                   ELECTRICITY SUBSECTOR                               2
+
+                                                                               19   RENEWABLE ENERGY
+
+
+                                    OTHER ENERGY
+                                                                     24
+iii
+                                        SOURCES
+
+
+                                                                                    ENERGY
+                                                                               26   EFFICIENCY
+
+
+                                          PETROLEUM
+                                          SUBSECTOR                  27
+                                                                                    CONSUMER
+                                                                               35   PROTECTION
+
+
+                              EMERGING TRENDS                        39
+
+
+
+
+      BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+LIST OF FIGURES
+Figure 2.1: A trend in the energy generated from July to December 2024 ................................................................................................................................. 3
+Figure 2.2: Electricity generation mix by source during as at 31st December 2024 ............................................................................................................. 3
+Figure 2.3: A trend in peak demand from July to December 2024 .................................................................................................................................................. 4
+Figure 2.4: A trend in peak demand from July 2022 to December 2024 ..................................................................................................................................... 4
+Figure 2.5: A trend in customer connections from July – December 2024 ................................................................................................................................ 5
+Figure 2.6: Energy Consumption based on KPLC regional categorisation for first half of the financial year 2024/25 .................................... 5
+Figure 2.7: A visual representation of energy consumption by each customer category
+            during the first half of the financial year 2024/25. ............................................................................................................................................................ 6
+Figure 2.8: A trend of energy curtailed from July to December 2024 ........................................................................................................................................... 7
+Figure 2.9: A trend in system loses from July to December 2024. ................................................................................................................................................... 10
+Figure 2.10: CAIDI trend from July to December 2024 . .......................................................................................................................................................................... 11
+Figure 2.11: SAIDI trend from July to December 2024 ............................................................................................................................................................................. 11
+Figure 2.12: The monthly SAIFI trend for the first half of the financial year 2024/25 . ......................................................................................................... 12
+Figure 2:13: A comparative trend of the reliability indices from July to December 2024. .................................................................................................. 12
+Figure 2:14: A comparative summary of reliability indices for the first half of the 2022/23 to 2024/25 financial years.. ................................ 12
+Figure 2.15: A comparative trend in pass-through costs from July 2022 to December 2024.. ........................................................................................ 15
+Figure 2.16: A comparative trend in retail tariff for domestic, small commercial, e-mobility and street lighting customer categories . 16
+Figure 2.17: A trend retail tariff for the commercial industrial customers..................................................................................................................................... 16
+Figure 2.18: Proportions of cost components in the DC3 retail tariff for December 2024.................................................................................................. 17
+Figure 2.19: A trend in TOU savings from 2022 to 2024 . ....................................................................................................................................................................... 17
+Figure 3.1: Renewable energy contribution to Kenya’s energy mix from July – December 2024 .................................................................................. 19
+Figure 3.2: Geothermal energy generated from July to December 2024 . ................................................................................................................................... 20
+Figure 3.3: A trend of the geothermal energy generated from Jan 2022 to Dec 2024 . ...................................................................................................... 20
+Figure 3.4: A trend of the energy generation from hydropower plants from July to December 2024........................................................................ 21                                                                             iv
+Figure 3.5: A trend of hydro energy generation from 2022 to 2024. ............................................................................................................................................... 21
+Figure 3.6: A trend of the wind energy generated from July to December 2024. ................................................................................................................... 22
+Figure 3.7: A trend of the wind energy generated between 2022 and 2024 .............................................................................................................................. 22
+Figure 3.8: A trend of the solar energy generated from July to December 2024 ................................................................................................................... 23
+Figure 3.9: A trend in the solar energy generation between 2022 and 2024. ............................................................................................................................ 23
+Figure 4.1: A trend in the energy imports from July to December 2024 . ..................................................................................................................................... 24
+Figure 4.2: A trend in the electrical energy imports between 2022 and 2024. ......................................................................................................................... 24
+Figure 4.3: A trend of the thermal energy generated from July to December 2024 . ........................................................................................................... 25
+Figure 4.4: A trend in the thermal energy generated from 2022 to 2024 . .................................................................................................................................. 25
+Figure 5.1: Distribution, by Star rating, of the registered household refrigerators models . .............................................................................................. 26
+Figure 5.2: Distribution, by Star rating, of the registered non-ducted AC models.................................................................................................................. 26
+Figure 6.1: A map of sedimentary basins in Kenya...................................................................................................................................................................................... 27
+Figure 6.2: Map of petroleum exploration blocks in Kenya. .................................................................................................................................................................. 27
+Figure 6.3: A biannual trend of petroleum imports from 2022 to 2024.......................................................................................................................................... 28
+Figure 6.4: A trend of local and transit imports volumes from July to December 2024...................................................................................................... 28
+Figure 6.5: A trend in domestic petroleum consumption from 2022 to 2024 . .......................................................................................................................... 29
+Figure 6.6: A monthly trend in the consumption of petroleum products. .................................................................................................................................... 29
+Figure 6.7: A trend in the local pipeline throughput from 2022 to 2024 . ..................................................................................................................................... 30
+Figure 6.8: A trend of the local and export pipeline throughput from July to December 2024 ..................................................................................... 30
+Figure 6.9: Trend in Murban Crude oil prices from July to December 2024 . ............................................................................................................................ 31
+Figure 6.10: Trend in Nairobi pump prices from July to December 2024. .................................................................................................................................... 31
+Figure 6.11: Share of LPG imports by route. .................................................................................................................................................................................................... 32
+Figure 6.12: A trend in LPG consumption from 2022 to 2024. ............................................................................................................................................................. 32
+Figure 6.13: A trend in LPG consumption from July to December 2024 . ..................................................................................................................................... 33
+Figure 6.14: HHI index for downstream petroleum from July to December 2024 . ................................................................................................................. 34
+Figure 9.1: A trend in electric mobility electricity consumption from July to December 2024........................................................................................ 39
+
+
+
+                                                                                                                               BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+    LIST OF TABLES
+    Table 2.1: Installed, effective and captive power capacity as at 31st December 2024 ......................................................................................................... 2
+    Table 2.2: A summary of energy consumption by each customer category during the first half of the financial year 2024/25. ............... 6
+    Table 2.3: Installed capacity in KPLC operated offgrid sites. ............................................................................................................................................................... 8
+    Table 2.4: Solar hybrid mini grids operated by REREC ........................................................................................................................................................................... 8
+    Table 2.5: Isolated diesel mini grid stations sites operated by REREC. ......................................................................................................................................... 9
+    Table 2.6: A summary of electricity reliability indices from July to December 2024 . .......................................................................................................... 10
+    Table 2.7: The base tariff for the financial year 2024/25. ....................................................................................................................................................................... 13
+    Table 2.8: A summary of the pass-through costs between July to December 2024. ............................................................................................................ 14
+    Table 2.9: A summary of the overall electricity retail tariff for the various customer categories. ................................................................................. 15
+    Table 2.10: A breakdown of the retail tariff for DC 3(>100kWh). ........................................................................................................................................................ 16
+    Table 2.11: Monthly savings by the ToU customers.................................................................................................................................................................................... 17
+    Table 2.12: A biannual comparative summary of market shares . ...................................................................................................................................................... 18
+    Table 3.1: Installed renewable energy capacity by technology as at December 2024. ......................................................................................................... 19
+    Table 6.1: Market share of OMCs as of December 2024 . ....................................................................................................................................................................... 33
+    Table 7.1: Summary of licenses issued between July and December 2024. ................................................................................................................................ 35
+    Table 7.2: Construction permits issued from July to December 2024 . ......................................................................................................................................... 36
+    Table 7.3: A list of generation and retail supply licences approved from July and December 2024............................................................................ 36
+    Table 7.4: Electrical worker and contractor licences issued from July and December 2024. .......................................................................................... 36
+    Table 7.5: Solar PV licences issued from July and December 2024................................................................................................................................................. 36
+    Table 7.6: Export fuels and local kerosene marked from July to December 2024................................................................................................................... 37
+    Table 7.7: Public education and advocacy programs undertaken from July to December 2024.................................................................................... 38
+
+
+v
+
+
+
+
+    BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+WHO WE ARE
+The Energy and Petroleum Regulatory Authority (EPRA) is established under the Energy Act, 2019 as the regulatory
+agency responsible for economic and technical regulation of the electricity, renewable energy, petroleum and coal sectors.
+
+
+
+
+                                                 Our Mission
+                        To facilitate sustainability in the energy and petroleum sectors through
+                                           regulation for improved livelihoods.
+
+
+
+
+                       Our Vision                                            Our Rallying Call
+           A leading energy and petroleum regulator.                                                                                    vi
+                                                                               Quality energy, quality life.
+
+
+
+
+                                                      Responsiveness
+
+
+
+
+         Accountability
+                                              Our Core Values                                              Integrity
+
+
+
+
+                                Innovativeness                              Professionalism
+
+
+
+
+                                                               BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+      ABBREVIATIONS AND ACRONYMS
+      AGO                          Automotive Gas Oil (Diesel)
+      AC                           Air conditioner
+      EEP                          Ethiopia Electricity Power
+      EPRA                         Energy and Petroleum Regulatory Authority
+      FEC                          Fuel Energy Cost
+
+      FERFA                        Foreign Exchange Rate Fluctuation Adjustment
+      GDP                          Gross Domestic Product
+      GWh                          Giga-Watt hour
+      HHI                          Herﬁdahl Hirschman Index
+      IK                           Illuminating Kerosene
+      LPG                          Liqueﬁed Petroleum Gas
+      LTWP                         Lake Turkana Wind Power
+      MWh                          Mega-Watt hour
+      NDC                          Nationally Determined Contributions
+vii   NGAO                         National Government Administrative Officers
+      OMCs                         Oil Marketing Companies
+      KETRACO                      Kenya Electricity Transmission Company
+      KEMP                         Kenya Electrification Modernization Project
+      KPC                          Kenya Pipeline Company
+      KWp                          Kilowatt peak
+      PMS                          Premium Motor Spirit (Super petrol)
+      PPA                          Power Purchase Agreement
+      PCC                          Program Coordination Committee
+      SPV                          Solar photovoltaic
+      WHRC                         Waste Heat Recovery Cycle
+
+
+
+
+      BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+DIRECTOR GENERAL’S
+MESSAGE
+
+
+
+
+It is with great pleasure that I present this report,           energy trade, ensuring a stable, affordable, and sustainable
+highlighting key developments and performance indicators        energy supply across the continent.
+in the energy sector over the past six months. We have
+                                                                We have also witnessed encouraging trends in Liquefied
+seen the energy landscape continue to evolve, driven by
+                                                                Petroleum Gas (LPG) consumption, aligning with the
+growing demand, advancements in infrastructure, and the
+                                                                government’s commitment to implementing the LPG
+increasing adoption of sustainable energy solutions. As we
+                                                                growth strategy. LPG demand increased by 13.38% during
+navigate this dynamic environment, collaboration remains
+                                                                this period. The demand is expected to continue its
+at the heart of our progress.
+                                                                upward trajectory as the government advances the LPG
+As economic activities expanded, energy utilization             growth strategy, focusing on promoting its use in schools
+across the country saw a notable increase compared to           and hospitals.
+a similar period in the previous financial year, with half-
+                                                                At the same time, innovation continues to shape the
+year consumption reaching 7,222.37 GWh. Peak demand                                                                                      viii
+                                                                sector’s future. The increased adoption of e-mobility during
+remained above 2,200 MW, hitting a high of 2,288.35 MW
+                                                                this period has led to a corresponding rise in electricity
+on 29th October 2024.
+                                                                consumption. E-mobility electricity consumption increased
+Electricity imports accounted for 10.41% of total               to 1.80 GWh, demonstrating a positive shift toward cleaner
+consumption in the current period, up from 6.16% in the         transport solutions. Additionally, the demand for autogas
+previous financial year. This increase is primarily due to      as an alternative transport fuel has gained traction, with
+the full commercial operation of electricity imports from       10 permits issued for the construction of autogas stations
+Ethiopia. Additionally, on 13th December 2024, energy           during the period under review.
+exchange with Tanzania commenced, marking an important
+                                                                As we move forward, it is imperative that we continue
+milestone in enhancing regional interconnectivity within
+                                                                fostering innovation, sustainability, and collaboration. I
+the East African Community (EAC).
+                                                                encourage you to delve into this report, which provides
+Beyond regional interconnectivity, our focus must also          comprehensive insights into our sector’s key performance
+extend to the broader vision of the Africa Single Electricity   indicators and strategic direction. Your engagement and
+Market (AfSEM). This initiative calls for increased             support are invaluable in driving the energy industry
+collaboration among the continent’s power pools, including      toward a more sustainable and resilient future.
+the Eastern Africa Power Pool (EAPP), the Western Africa
+Power Pool (WAPP), the Southern Africa Power Pool
+(SAPP), the North Africa Power Pool (COMELEC), and the          Daniel Kiptoo Bargoria OGW, MBS
+Central Africa Power Pool (CAPP). Strengthening these
+partnerships will be instrumental in achieving intra-African
+
+
+
+
+                                                                BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+     MESSAGE BY THE DIRECTOR,
+     ECONOMIC REGULATION
+     AND STRATEGY
+
+
+     During the review period, there was an overall increase in electricity and petroleum consumption—an indicator of the
+     vibrant economic activities that the energy sector supports. One notable trend we continue to observe is the growing
+     adoption of captive energy generation, particularly among industrial consumers. Solar photovoltaic (PV) systems account
+     for the highest contribution to the country’s captive generation capacity, making up 47.21% of the total.
+     In line with global energy transition trends, the Authority has been actively working with the e-mobility industry to drive
+     adoption. In April 2023, we introduced a discounted e-mobility tariff category, and its impact has been significant. To
+     ensure fair pricing for electric vehicle charging, the Authority is currently undertaking a study to establish an appropriate
+     end-user tariff for public charging stations. This initiative aims to promote accessibility and affordability, ultimately
+     encouraging more consumers to transition to cleaner transport solutions.
+ix   As we advance our energy agenda, we recognize the need to promote responsible energy consumption. Energy efficiency
+     remains a key pillar of our strategy, and we have been advocating for its adoption both in homes and industrial facilities.
+     This report highlights various initiatives aimed at enhancing energy efficiency, including the promotion of energy-efficient
+     appliances and conducting energy audits to help consumers optimize their energy use.
+     Public education has also been a strategic priority. Our nationwide outreach programs have helped raise awareness on
+     various energy matters, and we appreciate the invaluable support of our stakeholders in these efforts. The collective
+     commitment to fostering energy literacy has played a vital role in shaping informed decision-making among consumers.
+     Each edition of this statistics report has continued to improve, thanks to your feedback and engagement. We encourage
+     you to explore the insights presented and share your thoughts with us through our email address statistics@epra.go.ke.
+
+     Dr. John Mutua, PhD
+
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+BIANNUAL PERFORMANCE OVERVIEW
+
+
+
+
+2,288.35MW                         +6.13%                                      +13.38%
+Peak Demand, on 29th               Increase in electricity                     LPG consumption
+October 2024                       generation                                  increase
+
+
+
+
++7.12%                             81.16%                                      Ksh. 688.7m                                      x
+Increase in local petroleum        Renewable energy contribution               Savings by the Time of Use
+demand                             to the energy mix                           Tariff beneficiaries
+
+
+
+
+400kV
+Kenya-Tanzania transmission line
+energized on 13th December 2024
+
+
+
+
+                                                       BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+     CHAPTER 1
+
+    INTRODUCTION
+    Kenya’s economic landscape during the review period was shaped by a mix of domestic and international factors,
+    influencing specific sectors and overall economic growth. The country’s Gross Domestic Product (GDP) growth remained
+    steady, with projections indicating a rise of 5.4% for the entire year.
+
+    Inflation levels were kept relatively low, aided by increased food production and stable fuel prices. The average inflation
+    rate for the last quarter of 2024 stood at 4.4%, well within the government's target range. In efforts to stimulate economic
+    activity, the Central Bank of Kenya (CBK) implemented interest rate cuts, reducing the policy rate from 13.0% to 12.75%
+    in August 2024. Throughout the review period, the mean exchange rate remained stable, with monthly rates fluctuating
+    between Ksh. 128 and Ksh. 129 to the U.S. Dollar.
+
+    This period recorded a modest increase in global oil demand, though it was tempered by economic slowdowns in
+    significant regions like China. Supply dynamics revealed a steady rise in production from non-OPEC+ countries, while
+    OPEC+ maintained production levels through voluntary cuts. Price stability was observed in the market, influenced by
+    balanced supply-demand factors alongside geopolitical developments.
+
+    The stable macroeconomic environment fostered growth in the demand for electricity and petroleum products. Specifically,
+    electricity generation increased by 6.13%, while local demand for petroleum products rose by 7.12% compared to the same
+    period in the previous financial year.
+
+
+
+
+1
+
+
+
+
+    BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+ CHAPTER 2
+
+ELECTRICITY SUBSECTOR
+This section provides an overview of the performance across different segments of the electricity supply chain, focusing
+on generation, transmission, and distribution. It also examines key aspects such as electricity reliability indices, pricing
+systems, market analysis, and greenhouse gas emissions.
+
+2.1 Electricity Demand and Supply
+2.1.1 Installed capacity
+Installed capacity refers to the combined maximum power generation capacity of a country’s power plants. Table 2.1
+shows the country’s total installed capacity as of December 2024, which comprises grid connected, captive and off grid
+generation units.
+Table 2.1: Installed, effective and captive power capacity as at 31st December 2024
+
+                          Interconnected Capacity             Captive                                   Total
+                                            (MW)                                Offgrid                                    % Total
+ Technology                                                  Capacity                               Installed
+                                                                               Capacity                                  Installed
+                                                                (MW)                                Capacity
+                             Installed     Effective
+ Hydro                           839.5          809.7             33.0                  0.1              872.5              24.16%
+ Geothermal                     940.0           876.1               3.7                                  943.7              26.13%
+ Thermal                        564.8           558.4              21.3               41.0                627.1             17.36%
+ Wind                            435.5          425.5                 -                0.6               436.1              12.07%
+ Solar                           210.3          210.3            271.3                 3.4               484.9              13.43%       2
+
+ Bioenergy                         2.0            2.0             161.8                                  163.8               4.54%
+ Imports                        200.0          200.0                  -                                  200.0
+ WHRC                                -              -             83.5                                    83.5               2.31%
+ Total                         3,192.0       3,082.0             574.6               45.0              3,811.6           100.00%
+
+Geothermal energy accounts for the largest portion of Kenya’s installed capacity, at 26.13%. Hydro and thermal power
+follow with 24.16% and 17.36% respectively. Solar photovoltaic systems and wind generation contribute 13.43% and 12.07%
+to the total installed capacity respectively.
+During the review period, no new grid-connected power generation plants were commissioned.
+As of December 2024, captive power capacity, which mainly comprises biomass, solar and hydro, stood at 574.6 MW,
+accounting for 15.04% of the country’s total installed capacity. Captive power generation continues to attract commercial
+and industrial consumers due to its cost-effectiveness, ease of setup, and supportive government policies. Notably, captive
+solar PV generation increased to 271.3 MW during the period under review.
+
+2.1.2 Electrical Energy Generated
+Electrical energy generated refers to the electrical energy supplied to the national grid and public offgrid networks at
+the respective designated points of delivery. It represents the total output from power producers with power purchase
+agreements, excluding their auxiliary consumption.
+During the review period, a total of 7,222.37 GWh of electrical energy was generated, marking a 6.13% increase (417.09
+GWh) from the 6,805.28 GWh recorded in the first half of the previous financial year. This growth was driven by rising
+demand from organic load growth and an expanding customer base.
+Figure 2.1 shows the trend in energy generated during the period under review.
+
+
+
+
+                                                                BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                                        Energy Generated
+                              1,240.00                                                      1,233.59
+                                                             1,227.32
+                              1,220.00
+
+
+
+
+    Energy Generated in GWh
+                                         1,204.90                                                          1,201.52
+                              1,200.00
+                                                                                                                        1,187.14
+                              1,180.00
+                                                                             1,167.91
+
+                              1,160.00
+
+                              1,140.00
+
+                              1,120.00
+                                         Jul-24              Aug-24          Sept-24        Oct-24         Nov-24       Dec-24
+
+
+    Figure 2.1: A trend in the energy generated from July to December 2024
+    As illustrated in figure 2.1, the highest monthly energy generation during the review period was recorded in October at
+    1,233.6 GWh, while September had the lowest output.
+    Figure 2.2 presents the energy mix as at 31st December 2024.
+
+                                                                   Electricity generation mix
+                                                               39.81%
+
+
+
+
+3
+                                                                                                           10.41%
+                                                                                   13.57%
+                                            13.46%
+
+
+                                                                                                           3.15%
+
+
+                                                     8.42%
+                                                                               24.74%
+
+                                           Hydro Thermal
+                                         HYDRO       Thermal
+                                                         WIND           GEOTHERMALGeothernal
+                                                                        Wind                      Imports
+                                                                                     BAGASSE/BIOGAS   IMPORTS Solar
+                                                                                                                SOLAR
+
+
+    Figure 2.2: Electricity generation mix by source during as at 31st December 2024
+    Geothermal remains the leading source of electrical energy in the country generating 2,875.33 GWh of energy. Geothermal
+    sources accounted for 39.81% of total generation in the review period, down from 44.55% in a similar period last year.
+    This can be attributed to the shutdown of the 45MW Olkaria I power plant for rehabilitation and an increase in electricity
+    imports from Ethiopia.
+    Hydro generation ranked as the second largest source of electrical energy, producing 1,786.90 GWh. Its share of the
+    total energy mix grew from 22.54% in the first half of the previous financial year to 24.74% in the review period, driven by
+    improved hydrology.
+    Wind generation contributed 13.46% of the total energy generated, delivering 971.9 GWh to the national grid. In the first
+    half of the previous financial year, wind generation stood at 972.82 GWh, accounting for 14.3% of the energy mix during
+    that period.
+    Electricity imports rose significantly from 419.13 GWh in the first half of the financial year 2023/24 to 751.95 GWh in the first
+    half of the financial year 2024/2025. As a result, imports accounted for 10.41% of the total electrical energy in the current
+    period, up from 6.16% in a similar period in the previous financial year. This increase is attributed to the full commercial
+
+
+
+    BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+operations of electricity imports from Ethiopia during the review period. Additionally, energy exchange with Tanzania
+commenced on 13th December 2024, to support the commissioning of the Isinya-Arusha-Singida 400kV line. However, full
+commercial operation under the exchange agreement is yet to begin.
+Thermal generation increased slightly producing 608.46GWh of electrical energy during the review period representing
+8.42% of the energy mix. This compares to 606.09 GWh generated in the same period of the previous financial year, which
+accounted for 8.91% of the energy mix. Thermal generation remains crucial for voltage stability, particularly along the
+coast, and provides essential peak support.
+
+2.1.3 Peak Demand
+Peak demand represents the highest load on the electricity grid over the year, typically occurring between 19:30 and 20:30
+hours nationwide. During the review period, the peak demand reached 2,288.35 MW on 29th October 2024, marking an
+increase of 117.79 MW from the 2,170.56 MW recorded in the same period of the previous financial year. Notably, the period
+under review sustained peak demand levels above 2,200 MW. This growth is attributed to organic load increases, a rise in
+new connections, and improvements in transmission infrastructure.
+
+                                                                                                                                  Peak Demand
+  2,300                                                                                                                                                                          2,288                                          2,285
+  2,290
+  2,280
+  2,270
+  2,260
+                                                                                                                                                                                                                                                                                   2,247
+  2,250                                                                             2,239                                        2,242
+  2,240                           2,228
+  2,230
+  2,220
+  2,210
+  2,200
+  2,190                                                                                                                                                                                                                                                                                                        4
+                                Jul-24                                         Aug-24                                        Sept-24                                           Oct-24                                        Nov-24                                          Dec-24
+
+
+Figure 2.3: A trend in peak demand from July to December 2024
+The trend in peak demand from July 2022 to December 2024 is presented in figure 2.4.
+
+                                                                                                                          Peak Demand (MW)
+                     2,350
+                     2,300
+                     2,250
+
+
+
+
+  Peak Demand (MW)
+                     2,200
+                     2,150
+                     2,100
+                     2,050
+                     2,000
+                     1,950
+
+                             Jul-22   Aug-22   Sept-22   Oct-22   Nov-22   Dec-22   Jan-23   Feb-23   Mar-23   Apr-23   May-23   Jun-23   Jul-23   Aug-23   Sept-23   Oct-23   Nov-23   Dec-23   Jan-24   Feb-24   Mar-24   Apr-24   May-24   Jun-24   Jul-24   Aug-24   Sept-24    Oct-24   Nov-24   Dec-24
+
+
+Figure 2.4: A trend in peak demand from July 2022 to December 2024
+
+2.1.4 Electricity Access
+A total of 194,654 new customers were connected between July and December 2024 bringing the cumulative grid
+connected customers to 9,852,423. This was a decline in new customer connections compared to the same period in the
+previous financial year which recorded a total of 260,257 new connections. Figure 2.5 presents a trend of the cumulative
+connections in the period under review.
+
+                                                                                                                                                             BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                              Customer Connections
+      40,000                                                                                                                 9,900,000
+                       34,682                                                                   35,098
+      35,000                               32,607              32,965           32,295
+                                                                                                                             9,850,000
+      30,000                                                                                                    27,007
+                                                                                                                             9,800,000
+      25,000
+      20,000                                                                                                                 9,750,000
+       15,000
+                                                                                                                             9,700,000
+      10,000
+                                                                                                                             9,650,000
+        5,000
+           -                                                                                                                 9,600,000
+                       Jul-24             Aug-24              Sept-24           Oct-24          Nov-24          Dec-24
+
+                                                       New Customers           Cummulative Customers
+
+
+    Figure 2.5: A trend in customer connections from July – December 2024
+
+    2.1.5 Energy Consumption by Region
+    There was a general increase in energy utilization in all regions compared to a similar period in the previous financial year.
+    The country’s half year consumption grew from 5,205.79GWh to 5,484.54 GWh. Nairobi region maintained its place as the
+    leading consumer of electrical energy, utilizing 2,415.44 GWh. The region accounted for 44.04% of total electrical energy
+    utilization in the country. This was an improvement from 2,293.95GWh of electrical energy utilized in a similar period in the
+    previous financial year. Nairobi region encompasses Nairobi, Kiambu, Kajiado, Machakos and Makueni counties which have
+    a high concentration of industrial, SME, financial and service sectors as well as real estate and construction activities.
+    The Coast region ranked second in energy consumption, utilizing 988.21 GWh, which constituted 18.02% of the country's
+    total energy consumption. This is also an improvement from 930.05 GWh of electrical energy utilized in the first half of the
+5   previous financial year.
+    The Rift Valley region utilized 759.42 GWh of electrical energy as compared to 705.48 GWh of electrical energy utilized in
+    a similar period in the previous financial year. The region accounted for 13.85% of the total consumption.
+    North-Eastern and Mt. Kenya regions accounted for 10.69% and 6.45% of the overall consumption utilizing 586.09GWh
+    and 353.90GWh respectively. The North Eastern region clusters Garissa, Wajir, Mandera, Marsabit, Kitui, Thika and parts
+    of Machakos. The West Kenya and South Nyanza regions recorded the lowest electricity consumption at 280.78 GWh and
+    110.69 GWh, accounting for 5.12% and 1.84% of total consumption, respectively.
+    Figure 2.6 illustrates the energy consumption in all the regions.
+
+                                                         Energy Sales by Region (GWh)
+      3,000.00
+
+
+      2,500.00
+
+
+      2,000.00
+
+
+       1,500.00
+                                                                             2,415.44
+      1,000.00
+
+
+        500.00                             988.21
+                        759.42
+                                                                                             586.09
+                                                             353.90                                         100.69         280.78
+               -
+                      Rift Valley          Coast           Mt. Kenya         Nairobi     North Eastern   South Nyanza    West Kenya
+
+
+    Figure 2.6: Energy Consumption based on KPLC regional categorisation for first half of the financial year 2024/25
+
+
+
+    BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+2.1.6 Electricity Consumption by Category
+Industrial consumers are the primary consumers of electrical energy in Kenya. Customers in this category comprise of
+large and medium industries, factories, high-rise buildings, warehouses and public infrastructure such as airports, ports,
+and railway stations. In the half year under review, this category consumed 2,807.10 GWh, accounting for 51.18% of the
+country’s total consumption. This is a 101.0GWh increase in consumption compared to 2,706.10GWh of electrical energy
+consumed in a similar period last year signaling an increase in industrial activities.
+Industrial consumers are supplied at medium and high voltages and when supplied at low voltage their monthly usage
+exceeds 15,000 kWh per month and are categorized under the CI1 tariff band. Industries in the CI1 tariff band consumed
+924.11 GWh making it the highest energy consuming tariff band in all categories.
+Domestic consumers were second highest category consuming 1,728.19 GWh up from 1,599.33GWh in a similar period
+last year. This represents 31.51% of total energy consumption and increase from 30.76% in a similar period in the previous
+financial year. Customers in the DC3 tariff band (consuming over 100kWh per month) accounted for 47.2% of domestic
+consumption utilizing 816.50MWh of electrical energy in the period under review.
+Small commercial enterprises consumed 902.94 GWh, accounting for 16.46% of overall electrical consumption. This is an
+improvement from 843.04 GWh of energy used in a similar period last year.
+Street lighting is the only category that registered a decline in consumption by 12.0 GWh. Consumption reduced to 44.48
+GWh from 56.48 GWh in a similar period last financial year. Street lighting accounted for 0.81% of total energy consumption.
+Consumption in the electric mobility category, which includes electric vehicles and motorcycles, increased by 1.49 GWh,
+reaching 1.81 GWh during the review period, up from 0.32 GWh in a similar period in the last financial year. This growth
+highlights the increasing adoption of electric vehicles and motorcycles. The category accounted for 0.03% of total energy
+consumption. Table 2.2 and Figure 2.7 summarize energy consumption across customer categories.
+Table 2.2: A summary of energy consumption by each customer category during the first half of the financial year
+2024/25
+ Customer category                               Energy consumption (GWh)                                 Percentage
+ Industrial                                                2,807.10                                          51.18%                          6
+ Domestic                                                  1,728.19                                          31.51%
+ Small Commercial                                           902.94                                           16.46%
+ Street lighting                                            44.48                                             0.81%
+ E-Mobility                                                  1.81                                            0.03%
+ Total                                                    5,484.52                                          100.00%
+
+
+                                            Energy Consumption by Energy Sector
+
+
+
+                                 31.51%
+                                                 16.46%
+                                                          0.84%                                          0.03%
+                                                                                  0.81%
+
+
+                                     51.18%
+
+
+
+
+                        Industrial        Domestic   Small Commercial         Street lighting      E-Mobility
+
+
+Figure 2.7: A visual representation of energy consumption by each customer category during the first half of the
+financial year 2024/25
+
+
+
+
+                                                                    BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+    2.1.7 Energy Curtailment
+    Energy curtailment refers to the deliberate reduction of the output of a power plant that would otherwise operate at
+    its optimal capacity, due to decreased electricity demand. This typically occurs between 0000 – 0430 hours when the
+    demand is at its lowest. Curtailment is necessary to maintain the stability of the power system during low demand periods
+    and mostly affects geothermal and wind power plants.
+    During the review period, 511.72 GWh of geothermal energy was curtailed, representing 7.1% of the total energy generated.
+    This is a significant increase by 116.3% from the 236.21 GWh curtailed in a similar period last financial year. The increase in
+    curtailment can be largely attributed to increased energy imports during the period. However, curtailment is expected to
+    decrease as night time demand rises.
+    Notably, less geothermal energy was curtailed in the second quarter of the review period due to maintenance activities at
+    several geothermal plants. Figure 2.8 presents the trend in energy curtailed.
+
+                                                                        Energy Curtailed
+                                 140,000.00
+                                              117,834.11
+                                 120,000.00
+
+
+
+
+       Energy Curtailed in GWh
+                                                           104,009.23
+                                 100,000.00                                93,097.61
+
+                                 80,000.00                                                     69,677.72   69,135.86
+                                                                                                                       57,962.94
+                                 60,000.00
+                                 40,000.00
+                                 20,000.00
+                                      0.00
+                                               Jul-24       Aug-24          Sept-24             Oct-24     Nov-24       Dec-24
+                                                                                       Month
+
+7
+    Figure 2.8: A trend of energy curtailed from July to December 2024
+    July 2024 recorded the highest monthly curtailment at 117.83 GWh, while December recorded the lowest at 57.96 GWh.
+    No wind energy was curtailed during the period under review, as none of the wind plants met the Deemed Generated
+    Energy (DGE) thresholds, largely due to low wind speeds.
+
+    2.1.8 Electricity Transmission Infrastructure
+    Electricity transmission refers to the transfer of power in bulk from its point of generation to receiving substations. This
+    function is undertaken by KETRACO and KPLC using high voltage transmission lines operating at voltages of 132kV,
+    220kV, 400kV and 500kV.
+    In the period under review, KETRACO commissioned the 120km Sultan Hamud - Oloitoktok 132kV transmission line aimed
+    at providing stable power supply to parts of Kajiado County. and In addition, KETRACO and Tanzania Electricity Supply
+    Company Limited (TANESCO) completed and energized the 510km Kenya-Tanzania 400kV transmission interconnector.
+    The Kenya-Tanzania transmission line runs from Isinya in Kajiado County to Singida in Tanzania through Arusha. This
+    interconnector is a major milestone in regional interconnectivity in the EAC region and enables electricity trade between
+    the member states. The line was energized on 13th December 2024.
+
+    2.1.9 Mini Grids
+    Mini-grids play a crucial role in expanding electricity access in off-grid and underserved regions of Kenya, contributing
+    towards the goal of achieving universal electricity access. The Kenya National Electrification Strategy (KNES), 2018,
+    recognizes mini-grids as a key solution for providing electricity to areas where grid extension is not economically viable.
+    With an installed capacity of 4.5MW, Wajir town is the largest off grid distribution undertaking operated by KPLC. Other
+    towns with significant capacities are Mandera, Marsabit, Moyale and Habaswein. These 5 towns account for 46.02% of total
+    off-grid installed capacity. Additionally, most of the new mini-grids utilize renewable energy sources, reducing reliance on
+    diesel and supporting Kenya’s clean energy transition.
+
+
+
+
+    BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+a) Public Mini Grids
+Public mini-grids in Kenya have been developed primarily by the Kenya Power and Lighting Company (KPLC) and the Rural
+Electrification and Renewable Energy Corporation (REREC). KPLC operates these public off-grid power stations, which
+are powered by diesel generators, solar, or hybrid systems, serving customers within a 30 km radius of the respective
+plants. Table 2.3 shows installed capacities of KPLC operated off-grid sites in the country.
+Table 2.3: Installed capacity in KPLC operated offgrid sites
+ Station                 Installed Capacity (MW)       Station                     Installed Capacity (MW)
+ Wajir                   4.5                           North Horr                  0.584
+ Mandera                 2.1                           Lokori                      0.56
+ Marsabit                2.9                           Daadab                      0.784
+ Lodwar                  0.46                          Faza island                 1.508
+ Merti                   0.25                          Lokitaung                   0.584
+ Elwak                   0.965                         Kiunga                      0.184
+ Habaswein               1.88                          Banisa                      0.184
+ Baragoi                 0.62                          Kakuma                      1.2
+ Mfangano                0.65                          Kotulo                      0.396
+ Eldas                   0.76                          Karmorliban                 0.184
+ Takaba                  0.78                          Khorondile                  0.37
+ Rhamu                   0.68                          Sololo                      0.7
+ Lokichoggio             1.06                          Maikona                     0.32
+ Laisamis                0.64                          Lokiriama                   0.4                                                    8
+ Moyale                  1.452                         Hulugo                      0.212
+                                                    TOTAL 27.867
+
+REREC, on the other hand, continues to expand mini-grid development with support from development partners. Through
+the Kenya Electrification Modernization Project (KEMP) funded by World Bank, REREC completed development of 4
+mini grids at Wasini, Mageta, Ngodhe and Takawiri while 3 mini grids are under construction in Dabel in Moyale, Marsabit
+County, Kaeris and Kerio in Turkana County. The combined installed capacity of REREC developed mini-grids for both
+solar hybrid and diesel stands at 13.382MWp. These systems have significantly improved rural livelihoods by powering
+businesses, enhancing healthcare services, and facilitating educational development. Table 2.4 presents the solar hybrid
+mini grids while the table 2.5 shows the isolated diesel mini grids developed by REREC.
+Table 2.4: Solar hybrid mini grids operated by REREC
+ Site                      County               Constituency                                  Installed Capacity (KWp)
+ Sangailu                  Garissa              Ijara                                                       60
+ Liboi                                          Dadaab                                                      60
+ Eldera                                         Lagdera                                                     60
+ Garsweino                                      Fafi                                                        60
+ Ashabito                  Mandera              Mandera North                                               60
+ Arabia                                         Mandera East                                                60
+ Kilihiweri                                     Banisa                                                      60
+ Burduras                                       Mandera West                                                60
+ Gari                                           Lafey                                                       60
+ Shimbir Fatuma                                 Mandera South                                               60
+
+
+
+
+                                                                 BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+      Site                          County                    Constituency       Installed Capacity (KWp)
+     Illie Springs                  Turkana                   Turkana Central               60
+     Lowarengak                                               Turkana North                 60
+     Letea                                                    Turkana West                  60
+     Lopeduru                                                 Turkana East                  60
+     Kangangipur                                              Turkana South                 60
+     Napelilim                                                Turkana                       60
+     Hadado                         Wajir                     Wajir West                    60
+     Sarif                                                    Wajir South                   60
+     Basir                                                    Eldas                         60
+     Riba                                                     Wajir East                    60
+     Sarman                                                   Tarbaj                        60
+     Biyamadhow                                               Wajir South                   60
+     Gurar                                                    Wajir North                   60
+     Takawiri Island                Homa-bay                  Mbita                        204
+     Ngodhe Island                                            Suba-South                   146
+     Mageta Island                  Siaya                     Bondo                        800
+     Wasinii Island                 Kilifi                    Lunga Lunga                  732
+
+    Table 2.5: Isolated diesel mini grid stations sites operated by REREC
+     SITE                            COUNTY                   CONSTITUENCY      INSTALLED CAPACITY (KWp)
+     Hulugho                         Garissa                  Ijara                        275
+9    Dadaab                                                   Dadaab                       275
+     Faza Island                     Lamu                     Lamu East                    275
+     Kiunga                                                   Lamu East                    275
+     Takaba                          Mandera                  Mandera West                 230
+     Rhamu                                                    Mandera North                230
+     Banisa                                                   Banisa                       230
+     Kamoliriban                                              Mandera North                450
+     Laisamis                        Marsabit                 Laisamis                     730
+     North Horr                                               North Horr                   730
+     Maikona                                                  Maikona                      800
+     Sololo                                                   Moyale                       800
+     Lokichogio                      Turkana                  Turkana West                 730
+     Lokitaung                                                Turkana North                730
+     Lokori                                                   Turkana East                 730
+     Lokiriama                                                Loima                        600
+     Kakuma                                                   Turkana West                 600
+     Eldas                           Wajir                    Eldas                        490
+     Korondile                                                Wajir North                  490
+     Kotulo                                                   Tarbaj                       450
+
+
+
+
+    BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+b) Private Mini grids
+Private sector investment has played a complementary role in expanding access to electricity in Kenya. The private sector
+has developed several mini-grids, contributing a cumulative installed capacity of approximately 7.143MWp from solar PV
+and hydro sources. Notable developers include Renewvia Energy Kenya Limited, Kudura Power East Africa, Power Hive
+East Africa, Strauss Energy, Nirav Agencies, Dream Green Power, Magiro Power and institutions such as the University
+of Southampton Energy4Development program, and Deutsche Gesellschaft für Internationale Zusammenarbeit (GIZ)
+GmbH- ProSolar program.
+Private mini-grids have introduced innovative financing models and technology-driven solutions that have accelerated
+rural electrification. During the review period, the Authority granted tariff approvals for four mini grid sites operated by
+Renewvia Energy Kenya Limited. In total, private sector mini-grids have significantly increased clean energy access across
+counties such as Turkana, Marsabit, Busia, Kisii, and Homa Bay.
+
+2.1.10 System Losses
+System losses comprise of technical and commercial losses. Technical losses are inherent to a power system and are
+brought about by losses in transmission and distribution lines due to impedance of the lines, transformers and switchgear
+connected to that system. Commercial losses refer to unbilled electrical energy delivered to consumers. They include
+losses due to power supplied to illegal connections, unmetered connections, unread meters and meter tampering. While
+commercial losses are avoidable, technical losses cannot be avoided in totality but can be reduced.
+In the period under review, 24.2% of the total energy purchased by the national utility was lost. This is an increase of one
+percentage point from the 23.2% recorded in a similar period in the last financial year. This was 6.7% above the 17.5%
+threshold allowed by the Authority for the financial year 2024/2025 in the approved tariff. July recorded the highest
+system losses at 24.9% while the least losses were recorded in December at 23.7% as illustrated in figure 2.9.
+
+                                                    System Losses (%)
+               24.90%
+ 25.00%
+                                  24.70%
+ 24.80%
+                                                                                              24.50%
+ 24.60%                                                                                                                                  10
+ 24.40%
+ 24.20%
+ 24.00%                                              23.90%             23.90%
+
+ 23.80%                                                                                                             23.70%
+
+ 23.60%
+ 23.40%
+ 23.20%
+ 23.00%
+                Jul-24            Aug-24            Sept-24             Oct-24                Nov-24                Dec-24
+
+
+Figure 2.9: A trend in system loses from July to December 2024
+
+2.1.11 Electricity Reliability Indices
+Reliability indices are a numerical way of expressing the quality of service from a customer’s perspective. The indices
+measure how frequently power interruptions occur, how long they last and how long it takes to restore supply. There are
+three indices used to quantify how reliable a power supply system is namely: CAIDI, SAIDI and SAIFI. Table 2.6 shows the
+reliability indices for the first half of the financial year 2024/2025.
+Table 2.6: A summary of electricity reliability indices from July to December 2024
+                Jul-24       Aug-24        Sep-24      Oct-24       Nov-24          Dec-24        Average         EPRA target
+                                                                                                                   (FY24/25)
+ CAIDI           2.519        2.456        2.493        2.422         2.79            2.67          2.558               2.45
+ SAIDI           8.768        7.438        9.301        8.862        10.624          9.922           9.153              3.25
+ SAIFI           3.480        3.029        3.730        3.659        3.808           3.716          3.570               1.63
+
+
+
+                                                                BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+     a) Customer Average Interruption Duration Index (CAIDI)
+     This index measures the average outage duration that any given customer would experience. It gives an indicator of how
+     long it takes for power to be restored after a sustained interruption.
+     In the period under review, the average outage duration increased to 2.56 hours compared to 2.28 hours in the same period
+     in the previous financial year, exceeding EPRA’s target of 2.45 hours. October had the shortest restoration time while
+     November recorded the longest restoration time.
+                                                                            CAIDI
+      2.9
+                                                                                                 2.79
+      2.8
+
+       2.7                                                                                                           2.67
+
+      2.6
+                    2.519
+                                                                  2.493
+       2.5                                 2.456
+                                                                                    2.422
+      2.4
+
+       2.3
+
+       2.2
+                    Jul-24                Aug-24                 Sept-24            Oct-24      Nov-24              Dec-24
+
+
+     Figure 2.10: CAIDI trend from July to December 2024
+
+     b) System Average Interruption Duration Index (SAIDI)
+     SAIDI is a measure of the total duration of interruptions a customer would experience in a given period and is measured
+     in units of time (minutes, hours) per month or year.
+     In the period under review, customers experienced outages lasting an average of 9.15 hours per month. This is an increase
+11   in the duration of interruptions per month compared to an index of 8.84 hours per month in the same period in the last
+     financial year. This was longer than the required duration of 3.25 hours prescribed by the Authority for the current tariff
+     control period.
+                                                                            SAIDI
+       12.00
+                                                                                                  10.26              9.92
+      10.00                                                         9.30
+                       8.77                                                           8.86
+
+       8.00                                   7.44
+
+       6.00
+
+       4.00
+
+        2.00
+
+       0.00
+                      Jul-24                Aug-24                Sept-24           Oct-24       Nov-24             Dec-24
+
+
+     Figure 2.11: SAIDI trend from July to December 2024
+
+     c) System Average Interruption Frequency Index (SAIFI)
+     SAIFI measures the average number of interruptions that any given customer experiences. SAIFI is measured in units of
+     interruptions per customer.
+     Customers experienced an average of 3.57 interruptions per month in the period under review. This is an improvement
+     from the 3.87 interruptions per month registered in a similar period in the last financial year. However, it was above the 1.63
+     interruptions threshold per month set by the Authority.
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                            SAIFI
+ 4.00                                               3.73                                           3.81                   3.72
+                                                                            3.66
+              3.48
+ 3.50
+                                       3.03
+ 3.00
+
+ 2.50
+
+ 2.00
+
+  1.50
+
+  1.00
+
+ 0.50
+
+ 0.00
+             Jul-24                   Aug-24      Sept-24                  Oct-24                Nov-24                  Dec-24
+
+
+Figure 2.12: The monthly SAIFI trend for the first half of the financial year 2024/25
+During the review period, supply was most reliable in August and least reliable in November as shown in figure 2:13.
+
+                                                   Reliability indices
+ 12.000                                                                                           10.624
+                                                                                                                          9.922
+                                                    9.301
+ 10.000         8.768                                                       8.862
+                                        7.438
+  8.000
+
+  6.000
+               3.480                                3.730                   3.659                 3.808                   3.716
+  4.000                                 3.029
+                                                                                                                                             12
+  2.000                                                                                           2.790
+                2.519                   2.456       2.493                   2.422                                         2.670
+  0.000
+               Jul-24                  Aug-24      Sept-24                 Oct-24                Nov-24                  Dec-24
+
+                                                 CAIDI         SAIDI            SAIFI
+
+
+Figure 2:13: A comparative trend of the reliability indices from July to December 2024
+
+
+The duration of outages has increased over the past three years, as shown in figure 2.14.
+
+                                                 Reliability indices
+ 10.000                                                                                                       9.153
+                                                               8.836
+  9.000
+  8.000                    7.591
+  7.000
+  6.000
+  5.000                                                                    3.865
+  4.000                                3.373                                                                             3.570
+  3.000          2.245                               2.280                                          2.558
+  2.000
+  1.000
+  0.000
+                         Jul-Dec 22                          Jul-Dec 23                                     Jul-Dec 24
+
+                                                    CAIDI    SAIDI      SAIFI
+
+
+Figure 2:14: A comparative summary of reliability indices for the first half of the 2022/23 to 2024/25 financial years.
+
+
+
+                                                                    BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+     2.2 Electricity Pricing
+     The electricity pricing structure takes into account various factors, including the cost of generating, transmitting and
+     distributing electricity, pass through costs, allowable energy losses, as well as government taxes and levies.
+
+     2.2.1 Power Purchase Agreement
+     A Power Purchase Agreement (PPA) is a contractual arrangement between power generators and utility companies,
+     outlining the terms for the sale of electricity. These terms encompass the quantity of power to be sold and the associated
+     costs. PPAs play a crucial role in ensuring a long-term price stability by establishing a fixed electricity price throughout
+     the contract term. This stability is beneficial to both generators and consumers, as it helps mitigate the risks associated
+     with fluctuating market conditions. The following agreements between power producers and KPLC were approved in the
+     period under review.
+     1. The energy exchange agreement between KPLC and Tanzania Electric Supply Company (TANESCO)
+     2. A power purchase agreement between KPLC and Orpower Twenty-Two Limited.
+     3. The 3rd Supplemental Agreement to the PPA between KPLC and Kenya Electricity Generating Company PLC (KenGen)
+          for the isolated thermal, small hydro and wind power generating plants.
+     4. The Energy Exchange Agreement (EEA) between KPLC and Uganda Electricity Transmission Company Limited
+          (UETCL).
+     5. The PPA between Chania Power Company (Seller) and KTDA Power Company Limited (Sponsor) and KPLC (Buyer).
+     6. The PPA between Metumi Power Company (Seller) and KTDA Power Company Limited (Sponsor) and KPLC (Buyer).
+     7. The PPA between Nyakwana Power Company (Seller) and KTDA Power Company Limited (Sponsor) and KPLC
+          (Buyer).
+
+     2.2.2 Base Electricity Tariff
+     The base electricity tariff consists of multiple components that encompass the costs related to electricity generation,
+     transmission, distribution, operational expenses, and return on equity for the utility company. The Authority approved
+13   the base tariff for the tariff control period spanning 2022/23 to 2025/26 in March 2023. Table 2.7 provides details of the
+     applicable base tariff for the various customer categories during the review period.
+     Table 2.7: The base tariff for the financial year 2024/25
+      Customer Category                Voltage at           Energy Limit        Energy Charge (Ksh./kWh)          Demand
+                                       connection           (kWh/month)                                         Charge (Ksh.)
+                                                                              As at June    As at December
+                                                                                2024              2024
+      Domestic                        240 Volts/415               0-30          12.24            12.23                 0
+                                          Volts
+                                                                 30-100         16.58            16.54                 0
+                                                                  >100          20.58            19.08                 0
+      Small Commercial                240 Volts/415                <30          12.24            12.23                 0
+                                          Volts
+                                                                 30-100         16.36            16.34                 0
+                                                                  >100           20               19.4                 0
+
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+ Customer Category           Voltage at        Energy Limit            Energy Charge (Ksh./kWh)                       Demand
+                             connection        (kWh/month)                                                          Charge (Ksh.)
+                                                                   As at June            As at December
+                                                                     2024                      2024
+ Electric Mobility          240 Volts/415       200-15,000               16                       16                       0
+                                Volts
+ Commercial Industrial         415 Volts          >15,000               14.5                     13.74                   1,100
+                             11,000 Volts         No Limit             13.08                     12.44                    700
+                             33,000 Volts         No Limit             12.52                     11.92                    370
+                             66,000 Volts         No Limit             12.26                     11.68                   300
+                            132,000 Volts         No Limit             11.98                     11.4                    300
+                               220,000            No Limit               10                       10                     200
+                                Volts
+ Special Economic               132kV             No Limit               10                       10                     200
+ Zones
+ Street Lighting                                  No Limit              9.24                     9.23                      0
+
+
+
+2.2.3 Pass-through charges
+Pass-through charges are implemented to cover additional expenses incurred in the provision of generation, transmission
+and distribution of electricity which are not included in the base tariff. These include Fuel Energy Charge (FEC), Foreign
+Exchange Rates Fluctuations Adjustments (FERFA), Water Resource Authority (WRA) levy, Inflation Adjustments, and                          14
+taxes and levies.
+The Fuel Energy Charge (FEC) exhibited fluctuations during the review period with the lowest at Ksh. 3.25/kWh in July
+and highest at Ksh. 3.72/kWh in November 2024. These fluctuations are attributed to varying quanta of thermal power
+dispatch because of poor hydrology, varying wind output, and to compensate for unavailable geothermal generation.
+The WRA levy contributes to the maintenance and operation of the WRA infrastructure, ensuring sustainable water
+resource management. During the review period, the WRA levy was highest at Ksh. 0.0178/kWh in August and lowest at
+Ksh 0.0134/kWh in November. The rate is prescribed in Water Resources Management Rules, 2007 at 5 Cents/kWh for
+generation derived from hydro sources of 1MW and above.
+The FERFA is designed to offset the impact of foreign exchange rate fluctuations on power purchase costs and KPLC/
+KenGen forex losses on foreign currencies denominated loans. During the review period, FERFA recorded a high of Ksh.
+1.171/kWh in August and a low of Ksh. 0.6904/kWh in November 2024.
+Inflation adjustment is implemented to account for changes in the general price level of goods and services, ensuring
+that electricity tariffs align with prevailing economic conditions. The actual inflation adjustment on end-user tariffs, done
+biannually, was Ksh. 0.38/kWh throughout the review period. Table 2.8 illustrates the trend in pass-through costs.
+Table 2.8: A summary of the pass-through costs between July to December 2024
+ Pass Through                       Jul-24         Aug-24          Sep-24             Oct-24             Nov-24             Dec-24
+ Costs(Kshs/kWh)
+ FEC                                    3.25           3.48            3.43               3.39               3.72                3.57
+ FERFA                              0.9833             1.171         1.0332             1.1489            0.6904                 1.014
+ INFLATION ADJ.                         0.38           0.38            0.38               0.38               0.38                0.38
+ WRA LEVY                            0.0169          0.0178          0.0156            0.0139             0.0134               0.0135
+
+
+
+
+                                                                 BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                               Pass-through costs
+                     9
+                     8
+                     7
+                     6
+
+
+
+        Kshs./kWh)
+                     5
+                     4
+                     3
+                     2
+                     1
+                     0   Jan-22
+                         Feb-22
+                         Mar-22
+                         Apr-22
+                         May-22
+                         Jun-22
+                          Jul-22
+                         Aug-22
+                         Sep-22
+                         Oct-22
+                         Nov-22
+                         Dec-22
+                         Jan-23
+                         Feb-23
+                         Mar-23
+                         Apr-23
+                         May-23
+                         Jun-23
+                          Jul-23
+                         Aug-23
+                         Sep-23
+                         Oct-23
+                         Nov-23
+                         Dec-23
+                         Jan-24
+                         Feb-24
+                         Mar-24
+                         Apr-24
+                         May-24
+                         Jun-24
+                          Jul-24
+                         Aug-24
+                         Sep-24
+                         Oct-24
+                         Nov-24
+                         Dec-24
+                                                FEC           FERFA           INFLATION ADJ.      WRA LEVY
+
+
+     Figure 2.15: A comparative trend in pass-through costs from July 2022 to December 2024.
+
+     2.2.4 Evolution of the overall electricity Tariff
+     The overall electricity tariff covers both the cost of producing energy, the pass-through costs, taxes and levies. The
+     fluctuations in the overall tariff is attributed to the fluctuations in the pass through costs and the review of the base tariff.
+     Table 2.9 provides a summary of the trend in the overall tariff for the various customer categories.
+     Table 2.9: A summary of the overall electricity retail tariff for the various customer categories
+15    Customer Category                                                       Jul-24    Aug-24    Sep-24     Oct-24   Nov-24   Dec-24
+      DC 1 Lifeline (0-30 kWh)                                                20.03      20.48    20.29      20.35    20.28    20.43
+      DC 2 Ordinary (30-100 kWh)                                              25.24       25.7      25.5      25.57   25.49    25.64
+      DC 3 Ordinary (100-15000 kWh)                                           28.32      28.77     28.57     28.64     28.57    28.72
+      Small Commercial 1 (0-30 kWh)                                           20.03      20.48    20.29      20.35    20.28    20.43
+      Small Commercial 2 (30kWh-100kWh)                                          25      25.46     25.26     25.33     25.25     25.4
+      Small Commercial 3 (100kWh-1500kWh)                                      28.7      29.16    28.96      29.03     28.95     29.1
+      SC Bulk Supply (1000kWh-1500kWh)                                         28.7      29.16    28.96      29.03     28.95     29.1
+      Commercial Industrial 1 - 415 V (> 15,000 kWh)                          25.31      25.77     25.57     25.64     25.56    25.71
+      Commercial Industrial 2 - 11,000 V                                       21.17     21.63     21.43       21.5    21.42    21.57
+      Commercial Industrial 3 - 33,000 V                                       21.31      21.77    21.57      21.64    21.56    21.71
+      Commercial Industrial 4 - 66,000 V                                      20.38      20.83    20.64        20.7    20.63    20.78
+      Commercial Industrial 5 - 132,000 V                                     19.45        19.9     19.7      19.77    19.69    19.84
+      Commercial Industrial 6 - 220,000 V                                      17.37      17.82    17.62      17.69    17.61    17.76
+      Commercial Industrial 7 (SEZs)                                           17.37      17.82    17.62      17.69    17.61    17.76
+      E-Mobility                                                              24.59      25.05    24.85      24.92    24.84    24.99
+      Street Lighting                                                          16.4      16.85     16.66      16.72    16.65     16.8
+
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+Figure 2.16 presents a comparative trend in retail tariff for domestic, small commercial, e-mobility and street lighting.
+
+                                                            Retail tariff
+ 40.00
+ 37.50
+ 35.00
+ 32.50
+ 30.00
+ 27.50
+ 25.00
+ 22.50
+ 20.00
+  17.50
+ 15.00
+  12.50
+ 10.00         Jan-22
+               Feb-22
+               Mar-22
+               Apr-22
+               May-22
+               Jun-22
+                Jul-22
+               Aug-22
+               Sep-22
+               Oct-22
+               Nov-22
+               Dec-22
+               Jan-23
+               Feb-23
+               Mar-23
+               Apr-23
+               May-23
+               Jun-23
+                Jul-23
+               Aug-23
+               Sep-23
+               Oct-23
+               Nov-23
+               Dec-23
+               Jan-24
+               Feb-24
+               Mar-24
+               Apr-24
+               May-24
+               Jun-24
+                Jul-24
+               Aug-24
+               Sep-24
+               Oct-24
+               Nov-24
+               Dec-24
+                       DC 1   DC 2       DC 3        SC1           SC2          SC3            E-Mobility          Street Lighting
+
+Figure 2.16: A comparative trend in retail tariff for domestic, small commercial, e-mobility and street lighting
+customer categories
+The tariff evolution trend for Commercial Industrial Customers is illustrated in figure 2.17.
+
+                                                     Tariff Evolution
+               35.00
+
+               30.00
+
+
+
+
+   Kshs./kWh
+               25.00
+                                                                                                                                              16
+               20.00
+
+               15.00
+
+               10.00   Jan-22
+                       Feb-22
+                       Mar-22
+                       Apr-22
+                       May-22
+                       Jun-22
+                        Jul-22
+                       Aug-22
+                       Sep-22
+                       Oct-22
+                       Nov-22
+                       Dec-22
+                       Jan-23
+                       Feb-23
+                       Mar-23
+                       Apr-23
+                       May-23
+                       Jun-23
+                        Jul-23
+                       Aug-23
+                       Sep-23
+                       Oct-23
+                       Nov-23
+                       Dec-23
+                       Jan-24
+                       Feb-24
+                       Mar-24
+                       Apr-24
+                       May-24
+                       Jun-24
+                        Jul-24
+                       Aug-24
+                       Sep-24
+                       Oct-24
+                       Nov-24
+                       Dec-24
+                                 CI 1     CI 2       CI 3          CI4         CI 5           CI 6          CI 7
+
+
+Figure 2.17: A trend retail tariff for the commercial industrial customers
+Table 2.10 provides a breakdown of the overall retail tariff for the DC3 category, the largest consumer group under the
+domestic category, with monthly consumption exceeding 100 kWh.
+Table 2.10: A breakdown of the retail tariff for DC 3(>100kWh)
+ Component(Kshs./kWh)                             Jul-24         Aug-24          Sep-24              Oct-24        Nov-24        Dec-24
+ Base Tariff                                        19.08           19.08             19.08           19.08         19.08            19.08
+ Pass Through Costs                                  4.61            5.03             4.84             4.92          4.79            4.96
+ Taxes and Levies                                    4.62            4.66             4.65             4.64          4.70            4.67
+ Total                                              28.31           28.77             28.57           28.64         28.57            28.71
+
+Figure 2.18 Illustrates the cost component proportions in the December 2024 retail tariff for the domestic customer
+category (DC3).
+
+
+
+
+                                                                     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                       DC3 retail tariff cost components
+                                                   Taxes and Levies
+                                                         16%
+
+
+
+                                          Pass Through
+                                               17%
+                                                                                                  Base Tariff
+                                                                                                     67%
+
+
+
+                                                     Base Tariff      Pass Through      Taxes and Levies
+
+
+     Figure 2.18: Proportions of cost components in the DC3 retail tariff for December 2024.
+
+     2.2.5 Time of Use (ToU) Tariff
+     The ToU tariff targets small commercial, commercial-industrial and e-mobility customers with the aim of incentivizing
+     them to consume electricity during off-peak hours. It provides a 50% discounted tariff on the energy charge rates during
+     the off-peak periods (2200 to 0600 hours during weekdays, 1400 to 0800 hours on Saturdays and the whole day on
+     Sundays and during Public Holidays) on premises that electricity consumption thresholds are met.
+     The ToU beneficiaries cumulatively saved Ksh. 688.7 million during the review period. The savings achieved in this period
+     decreased by Ksh. 201.9 million compared to the first half of the previous financial year. During the review period, 84.9
+     GWh of energy was sold under the ToU tariff, down from 107.5 GWh in the same period of the previous year.
+     Table 2.11: Monthly savings by the ToU customers
+      Month                  No. of Customers Who                  Customer Savings (Ksh. Mill)                 Total Increase In Sales (Low
+17                                  Benefited                                                                            Rate) GWh
+      Jul-24                            2,446                                  149.7                                        19.0
+      Aug-24                            2,296                                  98.5                                         11.5
+      Sep-24                            2,263                                  88.2                                         10.8
+      Oct-24                            2,437                                  100.6                                        12.0
+      Nov-24                            2,452                                   117.1                                       14.2
+      Dec-24                            2,405                                  134.6                                        17.5
+
+     Source: Kenya Power
+     Figure 2.19 presents the trend in customers’ savings from the TOU tariff from January 2022 to December 2024.
+
+                                                ToU Beneficiary Savings (Kshs. Million )
+       250.0
+
+      200.0
+
+       150.0
+
+       100.0
+
+        50.0
+
+         0.0   Jan-22
+               Feb-22
+               Mar-22
+               Apr-22
+               May-22
+               Jun-22
+                Jul-22
+               Aug-22
+               Sep-22
+               Oct-22
+               Nov-22
+               Dec-22
+               Jan-23
+               Feb-23
+               Mar-23
+               Apr-23
+               May-23
+               Jun-23
+                Jul-23
+               Aug-23
+               Sep-23
+               Oct-23
+               Nov-23
+               Dec-23
+               Jan-24
+               Feb-24
+               Mar-24
+               Apr-24
+               May-24
+               Jun-24
+                Jul-24
+               Aug-24
+               Sep-24
+               Oct-24
+               Nov-24
+               Dec-24
+
+     Figure 2.19: A trend in TOU savings from 2022 to 2024
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+2.3 Market share
+The electricity subsector market share is determined by the proportion of energy purchased from power producers by the
+off taker (Kenya Power). KenGen maintained its dominant position in the energy market, with a market share of 59.94%.
+This dominance underscores KenGen's significant role as a major player in the energy generation landscape, attributed
+to its extensive infrastructure and diverse portfolio of power generation assets. Additionally, most of KenGen’s plants,
+particularly geothermal ones, operate as baseload power sources and have a high availability factor.
+Imports held the second largest market share of 10.48% followed by Lake Turkana Wind Power (LTWP) plant at 10.24%.
+Other generators with notable market shares include Orpower, Rabai Power, Kipeto Energy and Sossian. Table 2.12 shows
+the market shares of the electricity sector based on energy purchased for the period under review.
+Table 2.12: A biannual comparative summary of market shares
+ Company                              Energy Generated (GWh)                                Market Share
+                                        July-December 2024             July-December 2023              July -December 2024
+ KenGen                                        4,302.19                         62.24%                          59.94%
+ Imports                                        751.953                          6.19%                          10.48%
+ Lake Turkana Wind Power                        734.86                          10.25%                          10.24%
+ Orpower                                        414.635                          6.26%                           5.78%
+ Rabai Power                                   230.266                           3.18%                           3.21%
+ Kipeto Energy PLC                              215.887                          3.45%                           3.01%
+ Sosia Geothermal                              160.092                           1.90%                           2.23%
+ Others                                         367.73                           6.53%                           5.12%
+ Total                                          7,177.61                         100%                            100%
+                                                                                                                                        18
+
+
+2.4 Greenhouse Gas Emissions
+Kenya is a signatory to the Paris Agreement and has committed, through its Nationally Determined Contributions (NDCs),
+to reducing greenhouse gas (GHG) emissions by 32% by 2030, compared to a business-as-usual scenario of 143 MtCO2eq.
+The NDCs encompass various sectors, including energy, industrial processes, product use, agriculture, land use, forestry,
+and waste. They target key greenhouse gases such as carbon dioxide (CO2), methane (CH4), and nitrous oxide (N2O). This
+section presents an analysis of Greenhouse Gas Emissions from electricity supplied from the grid.
+These commitments have resulted in initiatives that have contributed to emission reductions in the electricity subsector.
+In the period under review, the CO2 emissions were estimated at 353,646.78 tCO2 from the total half year grid electricity
+generation of 7,177,614.50 MWh. This translates to a grid emission factor of 0.04927tCO2/MWh. This is a reduction of 6.18%
+from a similar period in the previous financial year which recorded a grid emission factor 0.05252tCO2/MWh.
+Overall, the CO2 emissions reduced by 0.5% from 355,418.46tCO2 to 353,646.78 tCO2. This is attributed to a 0.58% decline
+in grid thermal generation from 567,114 MWh to 563,831 MWh during the period under review.
+
+
+
+
+                                                               BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+      CHAPTER 3
+
+     RENEWABLE ENERGY
+     This section outlines the status of the renewable energy subsector, highlighting the installed capacity and performance
+     of each renewable energy resource during the review period.
+
+     3.1 Installed capacity
+     The installed capacity of renewable energy sources as at December 2024 was 2,901.0 MW, which accounts for 80.32 % of
+     Kenya’s total installed capacity. This comprises 2,427.2 MW of interconnected renewable energy capacity and 469.8 MW
+     of captive renewable energy capacity. The period under review saw additions in captive solar PV plants to an installed
+     captive capacity of 271.3 MW. Table 3.1 shows the country’s installed renewable energy capacity by technology as at
+     December 2024.
+     Table 3.1: Installed renewable energy capacity by technology as at December 2024
+       Technology               Interconnected Capacity                Captive          Offgrid         Total        % Total
+                                         (MW)                          Capacity        Capacity       Installed     Installed
+                                                                        (MW)                          Capacity
+                               Installed           Effective
+      Hydro                           839.5                809.7               33.0             0.1         872.5        24.16%
+      Geothermal                     940.0                  876.1                3.7            0.0         943.7        26.13%
+      Wind                            435.5                 425.5                  -            0.6         436.1        12.07%
+      Solar                           210.3                 210.3             271.3             3.4         484.9        13.43%
+      Bioenergy                          2.0                  2.0              161.8            0.0         163.8        4.54%
+19
+      Total                        2,427.2               2,323.6              469.8             4.0       2,901.0       80.32%
+
+     In the period under review, 81.16% of the energy supplied to Kenya’s national grid was obtained from renewable energy
+     sources. Thermal plants accounted for 8.42% while 10.41 % was imported. For the renewable energy sources, geothermal
+     energy generation continues to supply the majority of Kenya’s electric energy demand accounting for 39.81% of the total
+     energy generation. Hydro and Wind generation were second and third accounting for 24.74 % and 13.46 % respectively.
+     Utility scale solar generation contributed 3.15 % of the country’s energy needs. The renewable energy contribution to the
+     generation mix illustrated in figure 3.1.
+
+                                                                     Energy Mix
+
+
+
+
+                                                        8.42%
+
+
+                                                       10.14%
+                                                                                       81.16%
+
+
+
+
+                                                   Imports          Thermal       Renewable Energy
+
+     Figure 3.1: Renewable energy contribution to Kenya’s energy mix from July – December 2024
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+3.1.1 Geothermal
+Kenya’s installed geothermal capacity as at December 2024 was 943.7 MW. In the period under review 2,875.33 GWh of
+energy was generated from geothermal energy resources accounting for 39.81% of energy supplied to the interconnected
+grid. The monthly energy generation during the review period is illustrated in figure 3.2. The highest geothermal energy
+generation occurred in November, reaching 495.31 GWh, while the lowest was recorded in September at 455.23 GWh.
+
+                                                                Geothermal Energy Generated
+                            500                                                              493.29                495.31
+
+                            490
+
+
+
+
+   Energy Generated (GWh)
+                                                       483.33
+                            480                                                                                                         476.34
+                                         471.83
+                            470
+                            460                                        455.23
+
+                            450
+                            440
+                            430
+                                         Jul-24        Aug-24          Sept-24               Oct-24               Nov-24                Dec-24
+                                                                                   Month
+
+
+Figure 3.2: Geothermal energy generated from July to December 2024
+The geothermal energy generation in the period under review decreased by 5.17% from 3,032.03 GWh in a similar period in
+the previous financial year. The decrease is attributed to increased electricity imports. The geothermal energy generated
+between 2022 and 2024 is illustrated in figure 3.3.
+
+                                                                Geothermal Energy Generated
+                                                                                                                                                             20
+                            3,500.00
+                                                         3,034.95        3,000.05             3,032.03
+                            3,000.00                                                                                                    2,875.33
+                                                                                                                   2,675.67
+
+
+
+
+   Energy Generated (GWh)
+                                            2,482.60
+                            2,500.00
+
+                            2,000.00
+
+                            1,500.00
+
+                            1,000.00
+
+                             500.00
+
+                                  0.00
+                                            H1 2022      H2 2022         H1 2023              H2 2023              H1 2024              H2 2024
+
+
+Figure 3.3: A trend of the geothermal energy generated from Jan 2022 to Dec 2024
+
+3.1.2 Hydro Power
+As of December 2024, the installed capacity of Kenya's hydro plants was 872.5 MW, comprising 839.5MW of interconnected
+capacity and 33MW of captive capacity.
+During the period under review, interconnected hydropower plants generated 1,786.90 GWh, accounting for 24.79% of the
+total energy generated. Figure 3.4 provides a visual representation of the monthly energy generation from hydropower
+plants throughout the review period. July recorded the highest hydro energy generation at 358.23 GWh, while September
+had the lowest at 270.96 GWh.
+
+
+
+
+                                                                                    BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                                         Hydro Energy Generated
+                                 400
+                                              358.23
+                                 350                        320.88
+
+
+
+
+        Energy Generated (GWh)
+                                 300                                                         276.6      273.92     286.31
+                                                                              270.96
+                                 250
+
+                                 200
+
+                                 150
+
+                                 100
+
+                                  50
+
+                                   0
+                                              Jul-24        Aug-24           Sept-24        Oct-24      Nov-24     Dec-24
+
+
+     Figure 3.4: A trend of the energy generation from hydropower plants from July to December 2024
+     In the period under review, there was an increase in hydro energy generation, by 16.49 % compared to a similar period in
+     the previous financial year. This is attributed to improved hydrology in the review period. Figure 3.5 illustrates the hydro
+     energy generation from 2022 to 2024.
+
+                                                                         Hydro Energy Generated
+                                 2,000.00                                                               1,843.57   1,786.90
+                                 1,800.00
+                                                 1,585.48                                    1,534.01
+
+
+
+
+        Energy Generated (GWh)
+                                 1,600.00                     1,454.40
+                                 1,400.00
+                                 1,200.00                                       1,114.78
+21
+                                 1,000.00
+                                  800.00
+                                  600.00
+                                  400.00
+                                  200.00
+                                       0.00
+                                                 H1 2022      H2 2022           H1 2023      H2 2023    H1 2024    H2 2024
+
+
+     Figure 3.5: A trend of hydro energy generation from 2022 to 2024
+
+     3.1.3 Wind
+     Kenya’s installed wind capacity as at December 2024 was 436.1 MW. Figure 3.6 shows the monthly wind energy generation
+     during the review period. The highest wind energy generation occurred in September at 190.61 GWh, while the lowest was
+     recorded in July at 134.71 GWh.
+
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                        Wind Energy Generated
+                            250
+
+                                                             190.61
+
+
+
+
+   Energy Generated (GWh)
+                            200                                                 182.34
+                                             158.06                                                   158.16
+                                                                                                                           148.03
+                            150    134.71
+
+
+                            100
+
+
+                             50
+
+
+                              0
+                                   Jul-24    Aug-24         Sept-24             Oct-24               Nov-24                Dec-24
+
+
+Figure 3.6: A trend of the wind energy generated from July to December 2024
+Wind energy contributed 971.90 GWh to the interconnected grid during the period under review, accounting for 13.46% of
+the country’s total electricity mix. The wind energy generated decreased marginally by 0.09% from 972.82 GWh in a similar
+period in the previous financial year. The wind energy generation trend between 2022 and 2024 is provided in figure 3.7.
+
+                                                        Hydro Energy Generated
+                            1400
+
+                            1200             1,148.63
+                                                            1,053.09
+
+
+
+
+   Energy Generated (GWh)
+                                    994.4                                       972.82                                      971.9
+                            1000
+                                                                                                      825.77
+                            800                                                                                                                 22
+
+                            600
+
+                            400
+
+                            200
+
+                              0
+                                   H1 2022   H2 2022        H1 2023            H2 2023               H1 2024              H2 2024
+
+
+Figure 3.7: A trend of the wind energy generated between 2022 and 2024
+
+3.1.4 Solar
+As of December 2024, Kenya's solar installed capacity was 485.0 MW, comprising 210.3 MW of grid-interconnected
+capacity and 271.3 MW of captive capacity.
+The monthly energy generation from interconnected solar photovoltaic plants is displayed in Figure 3.8. The highest
+solar energy generation occurred in December, at 44.88 GWh, while the lowest was recorded in July, at 31.34 GWh. The
+fluctuations in energy generation are attributed to variations in solar insolation.
+
+
+
+
+                                                                       BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                           Utility Scale Solar Energy Generated
+                                 50
+                                                                                                                   44.88
+                                 45                                                   40.66       40.08
+
+
+
+
+        Energy Generated (GWh)
+                                 40                                   36.42
+                                                 34.44
+                                 35    31.34
+                                 30
+                                 25
+                                 20
+                                 15
+                                 10
+                                  5
+                                 0
+                                       Jul-24    Aug-24              Sept-24          Oct-24      Nov-24          Dec-24
+
+
+     Figure 3.8: A trend of the solar energy generated from July to December 2024
+     The energy generated from interconnected solar PV systems decreased by 5.47% from 240.99 GWh in a similar period in
+     the previous financial year. A trend in the annual solar energy generation between 2022 and 2024 is provided in figure 3.9.
+
+                                                           Utility Scale Solar Energy Generated
+                                 300
+                                                                      250.47
+                                                                                      240.99      232.62
+                                 250                                                                               227.82
+
+
+
+
+        Energy Generated (GWh)
+                                        190.24    193.48
+                                 200
+
+                                 150
+23
+
+                                 100
+
+                                  50
+
+                                  0
+                                       H1 2022   H2 2022             H1 2023         H2 2023      H1 2024         H2 2024
+
+
+     Figure 3.9: A trend in the solar energy generation between 2022 and 2024
+     Solar photovoltaic systems continue to have the highest contribution to the country’s captive generation capacity at 271.3
+     MW, which accounts for 47.21 % of the total captive capacity. The preference for this technology can be attributed to several
+     factors, including the ease of setup, advantageous solar insolation levels in many regions of Kenya, cost-effectiveness in
+     terms of energy production, and supportive government policies.
+
+     3.1.5 Bioenergy
+     Bioenergy refers to sustainable energy derived from organic matter and can take various forms such as firewood, biochar,
+     briquettes, bagasse, biogas, syngas, bioethanol, and biodiesel. In Kenya, these diverse forms of bioenergy find applications
+     in open-fire cooking, improved cook stoves, industrial biomass boilers, furnaces, internal combustion engines, lighting
+     lamps, and electricity generation. Notably, bioenergy constitutes a substantial portion of final energy consumption in
+     Kenya.
+     As of December 2024, the installed capacity for bioenergy was 163.8 MW, comprising 161.8 MW of captive capacity and
+     2MW of grid-interconnected capacity.
+
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+ CHAPTER 4
+
+OTHER ENERGY SOURCES
+These energy sources play a crucial role in stabilizing the grid by providing auxiliary support to the primarily renewable
+main energy sources.
+
+4.1 Imports
+Kenya imports 200 MW of electricity from Ethiopia Electricity Power (EEP) company and has energy exchange contracts
+with Uganda Electricity Transmission Company Limited (UETCL) and Tanzania Electricity Supply Company Limited
+(TANESCO). These energy exchange contracts allow Kenya to obtain competitively priced renewable energy from its
+neighbors while increasing the interconnected grid reliability and promoting regional power trade. In the period under
+review, Kenya imported 751.95 GWh of electricity accounting for 10.41 % of the country’s energy mix. Figure 4.1 shows the
+monthly energy imports during the review period. The highest energy imports were recorded in November at 134.18 GWh,
+while the lowest occurred in July at 106.11 GWh.
+
+                                                     Electrical Energy Imports
+                           160
+
+                           140              131.11                           130.11                134.18
+                                                                                                                         128.14
+                                                           122.4
+
+
+
+
+   Energy Imports (GWh)
+                           120   106.01
+                           100
+
+                           80
+
+                           60
+
+                           40
+                                                                                                                                             24
+                           20
+
+                            0
+                                 Jul-24    Aug-24         Sept-24            Oct-24               Nov-24                Dec-24
+
+
+Figure 4.1: A trend in the energy imports from July to December 2024
+Electricity imports increased by 79.41%, from 419.13 GWh in a similar period in the previous financial year to 751.95 GWh
+during the review period. This increase is attributed to the full commercial operation of the Ethiopia Electricity Power
+(EEP) contract, which began in December 2023.
+
+                                                     Electrical Energy Imports
+                           900
+                                                                                                   780.67
+                           800                                                                                          751.95
+
+
+
+
+   Energy Imported (GWh)
+                           700
+                           600
+                                                          500.67
+                           500                                               419.13
+                           400
+                           300
+                                  172.6
+                           200              143.4
+                           100
+                             0
+                                 H1 2022   H2 2022        H1 2023           H2 2023               H1 2024              H2 2024
+
+
+Figure 4.2: A trend in the electrical energy imports between 2022 and 2024
+
+
+
+
+                                                                    BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+     4.2 Thermal energy
+     Kenya has an installed thermal capacity of 627.1 MW comprising 512.8 MW of medium speed diesel and 52 MW of gas
+     turbines. Thermal energy resources are utilized to meet peak demand, for voltage support and to counter the intermittence
+     of renewable energy resources. In the period under review, 608.46 GWh of energy was sourced from thermal energy
+     sources. The highest thermal energy was generated in October at 110.59 GWh while the least was generated in September
+     at 92.30 GWh.
+
+                                                               T hermal Energy Generated
+                                 115
+                                                                                    110.59
+                                 110
+
+
+
+
+        Energy Generated (GWh)
+                                 105       102.77                                                              103.44
+                                                     99.49                                    99.86
+                                 100
+
+                                 95                                   92.3
+
+                                 90
+
+                                 85
+
+                                 80
+                                           Jul-24    Aug-24         Sept-24         Oct-24    Nov-24           Dec-24
+
+
+     Figure 4.3: A trend of the thermal energy generated from July to December 2024
+     Thermal generation has declined significantly since 2022, as shown in figure 4.4. However, during the review period, it
+     increased slightly by 0.39%, from 606.09 GWh in the same period of the previous financial year.
+
+                                                               T hermal Energy Generated
+25
+                                 1000
+                                            888.87
+                                  900
+                                  800
+
+
+
+
+        Energy Imported (GWh)
+                                                      695.93          699.56
+                                  700                                               606.09                     608.46
+                                  600                                                         521.02
+                                  500
+                                  400
+                                  300
+                                  200
+                                  100
+                                       0
+                                           H1 2022   H2 2022         H1 2023        H2 2023   H1 2024          H2 2024
+
+
+     Figure 4.4: A trend in the thermal energy generated from 2022 to 2024
+
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+ CHAPTER 5
+
+ENERGY EFFICIENCY
+The Authority has instituted two key regulations to promote energy efficiency: The Energy (Energy Management)
+Regulations, 2012 and the Energy (Appliances' Energy Performance and Labelling) Regulations, 2016.
+The Energy (Energy Management) Regulations primarily target industrial, commercial and institutional facilities with an
+energy consumption threshold of at least 180,000 kWh. These regulations require designated facilities to conduct energy
+audits and implement the recommended energy conservation measures arising from these audits with an aim of achieving
+at least 50% of the projected energy savings.
+Based on their energy consumption, facilities are classified into three categories: small facilities, which consume less
+than 180,000 kWh; medium facilities, which consume between 180,001 kWh and 1,200,000 kWh; and large facilities, which
+consume more than 1,200,000 kWh. In the period under review, 142 facilities comprising 25 small, 77 medium and 40
+large energy consumers conducted energy audits. These audits identified estimated annual energy savings amounting to
+79.082 GWh through the implementation of recommended energy conservation measures.
+The Energy (Appliances' Energy Performance and Labelling) Regulations, on the other hand, aim to ensure that the
+regulated electric appliances manufactured or imported into the country meet Kenya’s Minimum Energy Performance
+Standards (MEPS). The regulated appliances are: household refrigerators, non-ducted air conditioners, motors and lamps.
+During the period under review, 134 appliance models were registered comprising 80 household refrigerators, 53 air
+conditioners and 1 motor.
+The Authority issues energy efficiency labels for the registered appliances based on a star rating system, ranging from
+1 to 5 in the ascending order of energy efficiency, with 5 stars for the most efficient appliances. Figure 5.1 shows the
+distribution, by star rating, of the household refrigerators models registered during the period under review.
+
+                 Household Refrigerators                                                    Air Conditioners
+                                                                                                        1
+                                             14                                                        2%
+           20                               17%                              14                                                            26
+          25%                                                               26%
+
+
+
+                                                                                                                                  26
+                                                                                                                                 49%
+
+                                                                          12
+                                                                         23%
+                                        46
+                                       58%
+                     1-Star   2-Star   3-Star                                      1-Star     2-Star    3-Star   4-Star
+
+
+Figure 5.1: Distribution, by Star rating, of the registered       Figure 5.2: Distribution, by Star rating, of the registered
+household refrigerators models                                    non-ducted AC models
+As illustrated in figure 5.1, there were fourteen 1-Star rated,   As shown in figure 5.2, a total of twenty-six 1-Star rated
+forty-six 2-Star rated and twenty 3-Star rated refrigerator       AC models, accounting for 49%, were registered during
+models registered. The 2-Star rated refrigerator models           this period. In addition, twelve 2-Star and 14 3-Star rated
+accounted for more than half of the household refrigerators       AC models were registered, accounting for 23% and
+models registered during this period.                             26% respectively. Only one 4-Star rated AC model was
+Figure 5.2 shows the distribution, by star rating, of non-        registered.
+ducted air conditioners (AC) models registered during the
+period under review.
+
+
+
+
+                                                                  BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+      CHAPTER 6
+
+     PETROLEUM SUBSECTOR
+     The petroleum subsector comprises the upstream, midstream, and downstream segments.
+
+
+
+
+     6.1 Upstream Subsector
+     Upstream petroleum operations encompass all activities related to the exploration, development, production, separation
+     and treatment, storage, and transportation of petroleum up to the agreed delivery point. In Kenya, exploration activities
+     are ongoing both onshore and offshore.
+     To date, ninety-four (94) exploration wells have been drilled by various oil exploration companies across four sedimentary
+     basins. These basins cover a total surface area of 485,000 km² and are divided as follows:
+27
+     • Lamu Basin: 261,000 km²                                       • Anza Basin: 81,000 km²
+     • Mandera Basin: 43,000 km²                                     • Tertiary Rift Basin: 100,000 km²
+
+
+
+
+     Figure 6.1: A map of sedimentary basins in Kenya                         Figure 6.2: Map of petroleum exploration blocks in Kenya
+     The government is working on marketing some of the open petroleum blocks and is preparing data packages, block
+     atlases and ranking of the blocks in readiness for bidding rounds and licensing as envisaged under Section 18 of the
+     Petroleum Act, 2019.
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+6.2 Midstream and Downstream subsectors
+This section presents a summary of the performance of the mid and downstream subsector entailing supply, domestic
+consumption, pipeline transportation, pricing and competition.
+
+6.2.1 Petroleum supply
+During the period under review, 4,786,813.71 m3 were imported into the country for local consumption and export to
+neighboring countries; Uganda, South Sudan, DRC, Rwanda and Burundi. Figure 6.3 shows the biannual imports trend from
+2022 to 2024.
+
+                                           Biannual T rend of Petroleum Imports
+                                                                 Petroleum      from 2022 to 2024
+                                                                           Imports
+                 6,000,000.00
+                                                                          4,746,600.22                              4,586,719.93     4,786,813.71
+                 5,000,000.00   4,283,299.25        4,496,488.67                               4,344,400.66
+
+                 4,000,000.00
+
+
+  Quantity m33
+                 3,000,000.00
+
+                 2,000,000.00
+
+                 1,000,000.00
+
+                         0.00
+                                  H1 2022             H2 2022               H1 2023               H2 2023             H1 2024          H2 2024
+
+                                                         AGO             PMS          JET A1            Total
+
+
+Figure 6.3: A biannual trend of petroleum imports from 2022 to 2024
+Overall, the share of volumes designated for the local market accounted for 54.16% of the total import volume.
+                                                                                                                                                                     28
+                                                           LocalVolume
+                                               T rend of Imports and Transit
+                                                                        from Volumes
+                                                                             J uly to December 2024
+                 800,000.00     1,448,206.74                                                                                             1,600,000.00
+                 700,000.00                                1,175,403.56                                                                  1,400,000.00
+                                                                                         1,144,257.71
+                 600,000.00                                                                                           1,018,945.70       1,200,000.00
+
+
+
+  Quantity m33                                                                                                                                          Axis Title
+                 500,000.00                                                                                                              1,000,000.00
+                 400,000.00                                                                                                              800,000.00
+                 300,000.00                                                                                                              600,000.00
+                 200,000.00                                                                                                              400,000.00
+                 100,000.00                                                                                                              200,000.00
+                       0.00                                                                                                              0.00
+                                   Local                       Transit                      Local                       Transit
+                                       July to September 2024                                   October to December 2024
+
+                                                           AGO             PMS           JET A1             Total
+
+
+Figure 6.4: A trend of local and transit imports volumes from July to December 2024
+
+6.2.2 Petroleum Demand
+6.2.2.1 Domestic Petroleum Consumption
+The overall domestic demand for petroleum products increased by 7.12% to 2,911,214.12 m3 compared to a corresponding
+period in the previous financial year. Figure 6.5 illustrates the trend in demand over biannual periods.
+
+
+
+
+                                                                                   BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                         Annual
+                                           T rend in Domestic    Petroleum
+                                                              Petroleum    Consumption
+                                                                        Consumption from 2022 to 2024
+                       3,500,000.00
+                                      2,862,373.35          2,802,129.80                                                                            2,911,214.12
+                       3,000,000.00                                              2,775,560.80          2,717,699.16           2,719,366.43
+
+                       2,500,000.00
+
+
+
+        Quantity m
+                 m33
+                       2,000,000.00
+                       1,500,000.00
+                       1,000,000.00
+                        500,000.00
+                              0.00
+                                           H1                     H2                 H1                      H2                   H1                    H2
+                                                     2022                                       2023                                         2024
+
+                                                            AGO            PMS         JET A1            IK           Total
+
+
+     Figure 6.5: A trend in domestic petroleum consumption from 2022 to 2024
+     The demand for petroleum products through the period under review was steady with the highest consumption level
+     recorded in October. This notably coincides with the highest demand for AGO. The highest demand for PMS was recorded
+     in December and can be attributed to increased travel during the festive season. Figure 6.6 shows the trend in consumption
+     of petroleum products across the six months.
+
+                                                Monthly T rend in thePetroluem
+                                                            Monthly   Consumption of Petroleum Products
+                                                                               Consumption
+                       600,000.00
+                                      489,010.00            487,260.00                                 498,610.00                                   496,350.00
+                                                                                 472,890.00                                   467,090.00
+                       500,000.00
+29
+                       400,000.00
+
+
+        Quantity m33
+                       300,000.00
+
+                       200,000.00
+
+                       100,000.00
+
+                             0.00
+                                       Jul-24                Aug-24               Sept-24               Oct-24                  Nov-24                Dec-24
+
+                                                            AGO            PMS         JET A1           IK            TOTAL
+
+
+     Figure 6.6: A monthly trend in the consumption of petroleum products
+
+     6.2.2.2 Pipeline Throughput
+     The Kenya Pipeline Company (KPC) primarily handles petroleum products imported into the country. This represents
+     about 95% of petroleum products imported during the period under review.
+
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                   T rend in theLocal Pipeline
+                                                                Pipeline T     Throughput
+                                                                           hroughput from 2022 to 2024
+                  5,000,000.00
+                                                                                                                       4,151,122.30          4,362,300.05
+                  4,500,000.00                                               4,082,112.78          4,065,611.00
+                                    3,805,130.49          3,743,704.53
+                  4,000,000.00
+
+
+
+
+  Quanitity m
+            m33
+                  3,500,000.00
+                  3,000,000.00
+                  2,500,000.00
+                  2,000,000.00
+                  1,500,000.00
+                  1,000,000.00
+                    500,000.00
+                          0.00
+                                         H1                     H2                H1                   H2                   H1                   H2
+                                                   2022                                     2023                                      2024
+
+                                              Nairobi (PS 10)        Eldoret (PS 27)        Kisumu (PS 28)        Nakuru (PS 25)
+                                              JKIA (PS 9)            KONZA                  MIA (PS 12)           TOTAL
+
+
+Figure 6.7: A trend in the local pipeline throughput from 2022 to 2024
+Pipeline throughput increased by 7.30% during the review period compared to the same period in the previous financial
+year. This growth is attributed to higher volumes in both the transit and local markets. The local market accounted for
+54.98% of the total throughput. Figure 6.8 shows a comparison of the local and transit throughput during the period under
+review.
+                                                      Local
+                                 T rend of the Local and    and Export
+                                                         Export PipelinePipeline Throughput
+                                                                         T hroughput from J uly to December 2024
+                  900,000
+                                    766,417                                                        739,240
+                  800,000                                 734,875            708,599                                                           713,668
+                                                                                                                        699,501
+                  700,000
+                  600,000                                                                                                                                         30
+
+
+  Quantity m
+           m33
+                  500,000
+                  400,000
+                  300,000
+                  200,000
+                  100,000
+                         0
+                                    Jul-24                Aug-24             Sept-24                Oct-24              Nov-24                 Dec-24
+
+                                                              Local Volume             Export Volume          Total
+
+
+Figure 6.8: A trend of the local and export pipeline throughput from July to December 2024
+
+6.2.3 Petroleum Prices
+6.2.3.1 Evolution of International Crude Oil prices
+During the period under review, Murban Crude Oil recorded a peak price of $89.14/bbl in July and a minimum price of
+$73.41/bbl in November. There was a general downward progression in international crude oil prices during the review
+period largely due slowed global economic growth and reduced fuel demand in China.
+
+
+
+
+                                                                                         BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                          T rend inMurban
+                                                                    MurbanCrude
+                                                                          Crude Oil
+                                                                                Oil Price ($/BB1)
+                                   100   89.14
+                                   90                  83.93               83.8
+                                                                                            77.94                   74.87
+                                   80                                                                      73.41
+
+
+
+
+        Crude Oil Prices ($/BB1)
+                                   70
+                                   60
+                                   50
+                                   40
+                                   30
+                                   20
+                                    10
+                                    0
+                                         Jul-24        Aug-24            Sept-24            Oct-24         Nov-24   Dec-24
+
+
+     Figure 6.9: Trend in Murban Crude oil prices from July to December 2024
+
+     6.2.3.2 Local Retail Petroleum Prices
+     Fuel prices in Kenya are determined by landed costs, distribution costs, taxes and levies, demurrage costs and margins
+     accrued by Oil Marketing Companies (OMCs). The Authority computes these costs and publishes monthly prices for PMS,
+     AGO and IK on the 14th day of every month.
+     There was steady decline in fuel prices during the review period which reflected the trend in international oil prices. Figure
+     6.10 shows the trend of the Nairobi pump prices.
+
+                                                                     Nairobi
+                                                  T rend in Nairob Pump      Pump
+                                                                         Prices    Prices
+                                                                                from J uly to December 2024
+                                   250
+31
+                                   200
+
+
+
+
+        Pump Prices (KSh.)
+                                   150
+
+                                   100
+
+                                    50
+
+                                     0
+                                         Jul-24        Aug-24            Sept-24            Oct-24         Nov-24   Dec-24
+
+                                                                Super Petrol       Diesel       Kerosene
+
+
+     Figure 6.10: Trend in Nairobi pump prices from July to December 2024
+
+
+     6.3 Liquefied Petroleum Gas (LPG)
+     6.3.1 LPG supply
+     LPG is imported into the country through the Mombasa port and various border points. During the review period 93% of
+     LPG was imported through the port, 6% through the Namanga border while Loitoktok and Lungalunga accounted for the
+     remaining 1%.
+
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+                                                                                   LPG Imports by route
+
+                                                                            Share of LPG Imports by Route
+
+
+                                                                       1%                  1%
+
+                                                                                          6%
+                                                                              6%
+                                                                                                              93%
+
+
+
+                                                                                                93%
+
+
+
+
+                                                   Mombasa Port (AGO, KPRL,SOT)          Namanga         Others (Loitoktok
+                                                                                                                (Oloitoktokand
+                                                                                                                            andLungalunga)
+                                                                                                                                Lungalunga)
+
+
+
+Figure 6.11: Share of LPG imports by route
+
+6.3.2 LPG Demand
+Demand for Liquefied Petroleum Gas (LPG) increased by 13.38% to 219,416 metric tonnes in comparison to a similar period
+in the previous financial year. The increase is attributed to initiatives such as the promotion of clean cooking and the
+government led LPG growth strategy that has spurred the demand for LPG.
+The trend in consumption by biannual periods is summarized in the figure 6.12.
+
+                                                                A T rend in LPG Consumption
+                                                                           Annual LPG       from 2022 to 2024
+                                                                                      Consumption
+                                                                                                                                                                           32
+                                     250,000.00
+                                                                                                                                                     219,416.06
+
+
+
+
+   LPG Consumption (Metric Tonnes)
+                                                                                                             193,515.80          195,445.13
+                                     200,000.00                       173,605.78
+                                                  160,224.27                            167,077.86
+
+                                     150,000.00
+
+                                     100,000.00
+
+                                      50,000.00
+
+                                           0.00
+                                                     H1                  H2                H1                   H2                   H1                  H2
+                                                               2022                                   2023                                    2024
+
+Figure 6.12: A trend in LPG consumption from 2022 to 2024
+
+
+
+
+                                                                                                  BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+     Figure 6.13 shows the monthly trend in LPG consumption.
+
+                                                           Monthly LPG Consumption
+
+                         40,000                                                                                         37,485.55
+                                                                                      36,439.74
+                         35,000   37,345.95     38,267.94                                                36,048.02
+
+
+
+         Quantity (Mt)
+                         30,000                                     33,828.86
+                         25,000
+                         20,000
+                         15,000
+                         10,000
+                                    Jul-24         Aug-24               Sep-24          Oct-24                 Nov-24   Dec-24
+
+     Figure 6.13: A trend in LPG consumption from July to December 2024
+
+
+     6.5 Competition Analysis and Market Share
+     There were 144 registered Oil-Marketing Companies (OMCs) as of December 2024. These companies market AGO, IK,
+     PMS, JET A1, lubricants, and LPG. Table 6.1 presents the market share of the OMCs during the review period.
+
+      Company                                                                 Total Sales - PMS, AGO, IK                     % Share
+                                                                                         and JET A1 (m3)
+      Vivo Energy Kenya Limited                                                               621,226.91                         21.34%
+      Rubis Energy Kenya Plc                                                                 464,539.40                          15.96%
+33    TotalEnergies Marketing Kenya Plc                                                       422,882.76                         14.53%
+      Ola Energy Kenya Limited                                                                128,721.00                         4.42%
+      Be Energy Limited                                                                       108,365.86                          3.72%
+      Hass Petroleum Kenya Limited                                                                92,105.00                       3.16%
+      Galana Energies Limited                                                                 90,698.06                           3.12%
+      Stabex International Ltd                                                                    66,693.53                      2.29%
+      Lake Oil Limited                                                                            56,823.21                       1.95%
+      Petro Oil Kenya Limited                                                                 55,455.00                           1.90%
+      Tosha Petroleum (Kenya) Limited                                                             55,376.94                       1.90%
+      Dalbit Petroleum Limited                                                                    52,814.21                       1.81%
+      Oryx Energies Kenya Limited                                                                 45,104.67                       1.55%
+      Towba Petroleum Company Limited                                                             40,453.16                       1.39%
+      Aftah Petroleum(K)Ltd                                                                       37,180.89                       1.28%
+      Zacosia Trading Limited                                                                     36,665.19                       1.26%
+      Gapco Kenya Limited                                                                      34,555.00                          1.19%
+      Astrol Petroleum Company Limited                                                        34,406.08                           1.18%
+      Sahara Energy Limited                                                                        31,127.44                      1.07%
+      Others                                                                                  436,019.81                         14.98%
+
+     Table 6.1: Market share of OMCs as of December 2024
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+The Herfindahl–Hirschman Index (HHI) for the downstream petroleum subsector in 2024 was 0.1050 which was slightly
+above the Authority’s benchmark of 0.1. This is an indicator of competition in the sector since none of the OMCs have
+significant market dominance.
+
+                                   HHI Index for   HHI  IndexPetroleum in 2024
+                                                 Downstream
+ 53.50%                                                                                                                          0.108
+ 53.00%                                                                                                                          0.106
+ 52.50%                                                                                                                          0.104
+ 52.00%                                                                                                                          0.102
+  51.50%
+                                                                                                                                 0.1
+ 51.00%
+                                                                                                                                 0.098
+ 50.50%
+ 50.00%                                                                                                                          0.096
+ 49.50%                                                                                                                          0.094
+ 49.00%                                                                                                                          0.092
+ 48.50%                                                                                                                          0.09
+               Jul-24         Aug-24 Market ShareSept-24
+                            Cumulative            for Top Three Players Oct-24              Nov-24               Dec-24
+
+                            Cummulative Market Share for Top Three Players            HHI            Target
+
+Figure 6.14: HHI index for downstream petroleum from July to December 2024
+
+
+
+
+                                                                                                                                            34
+
+
+
+
+                                                                   BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+      CHAPTER 7
+
+     CONSUMER PROTECTION
+     The Authority plays a vital role in protecting consumer interests within the energy and petroleum sectors. The consumer
+     protection functions include licensing, monitoring the quality of energy and petroleum products, addressing complaints
+     and disputes, investigating accidents and incidents and conducting public education and advocacy. This section, in
+     particular, delves into aspects related to licensing, fuel quality, LPG compliance and public education.
+
+     7.1 Licensing
+     7.1.1 Petroleum and LPG operations
+     The Authority grants licenses, permits or certificates to any persons intending to undertake the importation, exportation,
+     bulk storage or transportation of petroleum products. Table 7.1 summarizes the various categories of petroleum and LPG
+     licenses issued from July to December 2024.
+
+     Table 7.1: Summary of licenses issued between July and December 2024
+      Type of licence                                                                               Licences issued
+      Transport of petroleum products(Except LPG) by Road                                                 1,069
+      Export and Wholesale of Petroleum Products(Except LPG)                                               585
+      Retail of LPG in Cylinders                                                                           465
+      Retail of Petroleum Products (except LPG)                                                            314
+      Transport of LPG in Cylinders                                                                        161
+35    Storage & Wholesale of LPG in cylinders                                                              120
+      Transport of LPG in bulk by Road                                                                     113
+      Transport of Jet-A1                                                                                  94
+      Import, Export and Wholesale of Petroleum Products (Except LPG)                                       76
+      Storage & Filling of LPG in Cylinders                                                                 51
+      Export and Wholesale of LPG in bulk                                                                   28
+      Import, Export and Wholesale of LPG in bulk                                                           22
+      Storage of petroleum products(Except LPG)                                                             21
+      Export & wholesale of Jet-A1                                                                          16
+      Import, Export and Wholesale of Bitumen                                                               15
+      Retail of LPG at Autogas Dispensing Station                                                           9
+      Import, Export and Wholesale of Fuel Oil                                                              8
+      Import of Lubricants                                                                                  5
+      Bunkering of Petroleum Products (Except LPG)                                                          4
+      Storage & Filling of LPG in Bulk                                                                      2
+      Storage of LPG in Bulk                                                                                2
+      Storage of Crude Oil                                                                                  1
+      Retail of LPG in Cylinders Via Smart Meters                                                           1
+      Total                                                                                               3,182
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+Additionally, the Authority issues construction permits to ensure that proposed petroleum and LPG facilities are developed
+in accordance with the applicable standards. The permits issued in the period under review are shown in table 7.2.
+Table 7.2: Construction permits issued from July to December 2024
+ Permit Category                                                                                         Permits issued
+ Petroleum Retail Dispensing Station                                                                             46
+ Autogas Dispensing Station                                                                                         10
+ Liquefied Petroleum Gas (LPG) Storage And Filling Facility                                                         3
+ Liquefied Petroleum Gas (LPG) Consumer Site                                                                        1
+ LPG consumer site for Public Institutions                                                                          1
+ Fuel Consumer Site                                                                                                 1
+ Total                                                                                                           62
+
+
+
+7.1.2 Electricity and Renewable Operations
+The Authority approved the following generation and retail supply licences during the review period.
+Table 7.3: A list of generation and retail supply licences approved from July and December 2024
+ No      Licensee                                Technology                 Capacity                      County
+ 1       Ecoligo Limited (SPV Plant at           Solar PV                   3.3MW                         Kwale
+         Abbysinia Steel)
+ 2       Capwell Industries Limited              Solar PV                   1.23MW                        Kiambu
+                                                                                                                                         36
+Additionally, the Authority licensed 342 electrical workers and 356 electrical contractors. Table 7.4 presents the number
+of licenses issued for each category.
+Table 7.4: Electrical worker and contractor licences issued from July and December 2024
+ Licence category               Number of Issued Certificates/Licences
+                                      C2            C1              B                 A2                A1               Total
+ Electrical Workers                   148           124             39                 6                25                342
+ Electrical Contractors               168           117             32                 3                36                356
+
+The Energy (Solar Photovoltaic Systems) Regulations, 2012 provides for licensing of solar PV firms and technicians. A total
+of 217 licenses were issued to solar PV firms and 86 to solar PV technicians as summarized in table 7.5.
+Table 7.5: Solar PV licences issued from July and December 2024
+ Category                                                        Class                         Number of licences issued
+ Solar PV Contractor/ Vendor/ Manufacturer                         C1                                         85
+                                                                   V1                                         66
+                                                                   V2                                         66
+ Solar PV Technicians                                              T3                                          72
+                                                                   T2                                          14
+
+
+
+
+                                                                BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+     7.1.3 Energy auditors, firms and appliances
+     The Energy (Energy Management) Regulations 2012 provides for promotion of energy efficiency in designated industrial,
+     institutional and commercial facilities. The Authority licenses energy auditors and energy audit firms who undertake
+     energy audits in these facilities. During the review period, the Authority licensed 3 energy audit firms and 1 energy auditor.
+     The Energy (Appliances’ Energy Performance and Labelling) Regulations, 2016, promote energy efficiency in electrical
+     appliances. These regulations mandate that imported and locally manufactured refrigerators, non-ducted air conditioners,
+     lamps, and motors undergo testing to ensure compliance with the applicable Kenya Standards.Importers and manufacturers
+     of these regulated appliances are eligible for a registration certificate upon demonstrating compliance with the regulations.
+     During the review period, the Authority issued registration certificates for 134 appliance models, comprising 80 refrigerator
+     models, 53 air conditioner models, and 1 motor.
+
+     7.2 Fuel Quality Monitoring
+     This process involves adding small amounts of a distinct identifier, commonly a bio-chemical liquid referred to as the
+     marker, to fuel products. This helps identify the presence of fuel adulterants or fuels intended for export. During the review
+     period, the Authority marked 2,006,609,441 litres of export volumes and 23,587,163 litres of local kerosene. A summary of
+     volumes marked per month is provided in table 7.6.
+     Table 7.6: Export fuels and local kerosene marked from July to December 2024.
+      Month                                               Export Volume Marked (Litres)    Local Kerosene Volume Marked
+                                                                                                      (Litres)
+      July                                                             353,484,951                      3,818,558
+      August                                                            320,777,417                     3,800,607
+      September                                                         322,140,761                     3,601,641
+      October                                                          303,099,035                      3,308,092
+37
+      November                                                         323,201,986                      3,949,401
+      December                                                         383,905,291                      5,108,864
+      Total                                                          2,006,609,441                     23,587,163
+
+     In addition to marking fuels at the source, the Authority monitors petroleum products at retail stations across the country
+     to ensure fuel quality. Site selection for sampling considers several factors, including nationwide coverage, intelligence
+     from surveillance efforts, and public feedback.
+     During the period under review, the Authority conducted 11,950 sample tests at 2,649 petroleum outlets across the country.
+     Out of the tests carried out, 2,622 stations equivalent to 98.98%, were found to be compliant. However, 27 stations were
+     non-compliant, and appropriate penalties were imposed as per the relevant legislation.
+
+     7.3 LPG Compliance
+     The Authority conducts technical and environmental, health and safety audits of licensed LPG storage and filling facilities,
+     to assess their adherence to regulatory requirements, operational safety standards, maintenance of plant and equipment,
+     emergency preparedness, and risk management practices.
+     These audits assess compliance with national legislation and standards including: the Energy Act No. 1 of 2019; the
+     Petroleum Act No.2 of 2019; the Environmental Management and Co-ordination Act, 2015; the Occupational Safety and
+     Health Act, 2007; Kenya Standards relevant to petroleum sub-sector; and international standards, sector best practices
+     and maritime guidelines.
+     During the review period, 23 audits were conducted across Central, Coast, Nairobi and North Eastern regions. Arising from
+     the audits conducted, facilities prepare corrective action plans in the event of non-compliance and follow-up audits are
+     planned to verify the implementation of corrective actions.
+
+
+
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+7.4 Public Education and Advocacy
+The Authority undertakes public education and advocacy initiatives nationally to increase awareness and bridge
+knowledge gaps in the energy and petroleum sector. These initiatives are primarily focused on fostering attitude and
+behavior change related to safety, compliance, consumer rights and the adoption of sustainable clean energy solutions.
+Table 7.7 provides a breakdown of the public education and advocacy programs implemented during the period.
+
+
+Table 7.7: Public education and advocacy programs undertaken from July to December 2024
+ No    Type of Forum                                          Number of             Region
+                                                          grassroots forums
+ 1     Bodaboda riders engagement forums                            3               Kisumu, Eldoret and Kitengela
+ 2     Electricity and Solar PV contractors and                     2               Uasin Gishu and West Pokot
+       licensees
+ 3     Petroleum and LPG licensees and public                       9               Kajaido, Uasin Gishu, Nairobi and
+       sensitizations on safety, compliance and                                     West Pokot
+       consumer rights
+ 4     National Government Administration                           3               Uasin Gishu, Nairobi and West Pokot
+       Officers (NGAO) and Security & Intelligence
+       Committees
+ 5     County government trade, fire and enforcement                3               Uasin Ngishu, Nairobi and West
+       staff capacity building and sensitization forums                             Pokot
+
+ 6     Institutions of higher learning energy and                   4               Kiambu, Nairobi and West Pokot
+       petroleum sensitizations
+                                                                                                                                       38
+ 7     LPG and Petroleum marketers and tanker                       3               Online and Eldoret service stations
+       drivers safety and compliance engagements                                    and Petroleum Pipeline Depot
+
+The Authority conducted 27 forums across six counties, along with two national online forums. These engagements
+targeted key strategic stakeholders, including petroleum tanker drivers, licensees, bodaboda riders, National Government
+Administration Officers (NGAO) and security committees, county government staff, students from institutions of higher
+learning, and the general public.
+
+
+
+
+                                                              BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+      CHAPTER 8
+
+     EMERGING TRENDS
+     8.1. Electric Mobility
+     Electric mobility is gaining prominence in Kenya as a strategy for decarbonizing the transport sector. The Ministry of
+     Energy and Petroleum has put in place various policies to promote electric mobility. These include the Kenya National
+     Energy Efficiency and Conservation Strategy (2020) which has a target of achieving 5% electric imported vehicles annually.
+     Kenya also signed the COP26 declaration on acceleration of the transition to 100% zero-emission cars. The government,
+     through the Fourth Medium Term Plan ( 2023-2027) of the Vision 2030 has put in place various strategies to develop
+     e-mobility. They include the development and implementation of e-mobility policy, establishment of e-mobility charging
+     infrastructure and promotion of electric motorcycles manufacturing.
+     To encourage the uptake of electric mobility, the Authority is implementing a special tariff for e-mobility effective 1st April
+     2023. In addition, the Authority is currently undertaking a study to establish the end user tariff for public charging stations.
+     This will ensure that customers get charged fair tariffs thereby encouraging consumption.
+     Figure 8.1 presents a trend of the electricity consumption by the electric mobility tariff category.
+
+                                                           Electric Mobility Electricity Consumption
+                                        0.5
+                                                                                                        0.43
+
+
+
+
+        Electricity Consumption (GWh)
+                                        0.4                                              0.38
+                                                                                                                      0.36
+
+                                        0.3                              0.26
+                                               0.22
+                                        0.2
+39                                                      0.14
+
+                                        0.1
+
+
+                                         0
+                                              Jul-24   Aug-24          Sept-24          Oct-24         Nov-24        Dec-24
+
+
+     Figure 8.1: A trend in electric mobility electricity consumption from July to December 2024
+     Total electricity consumption under the electric mobility tariff category during the review period reached 1.80 GWh, marking
+     a 480.65% increase compared to the same period in the previous financial year. As of December 2024, the cumulative
+     number of registered electric vehicles (EVs), including two-wheelers, three-wheelers, and four-wheelers, stood at 5,294,
+     reflecting a 41.06% rise from 3,753 EVs registered in 2023. This growth can be attributed to government initiatives such as
+     the introduction of the special electric mobility tariff, a reduction in excise duty on electric vehicles from 20% to 10%, the
+     exemption of fully electric cars from Value Added Tax (VAT), and the expansion of charging infrastructure.
+
+     8.2. Green Hydrogen
+     Green hydrogen is emerging as a promising solution for decarbonizing the transport, agriculture, and energy sectors.
+     In September 2023, Kenya launched its Green Hydrogen Strategy and Roadmap during the Africa Climate Summit. This
+     initiative aims to leverage the country's abundant renewable energy resources to drive demand for green hydrogen across
+     various applications.
+     The strategy is anchored on four key pillars: enhancing the balance of payments, strengthening food security and resilience,
+     promoting green industrialization and decarbonization, and attracting investments. It sets ambitious impact targets,
+     including securing at least $1 billion in direct investments by 2030, creating at least 25,000 direct jobs between 2028 and
+     2032, avoiding at least 250,000 tonnes of CO2 emissions annually by 2030, and producing green shipping fuels by 2030.
+     In May 2024, the Authority published the Kenya Green Hydrogen and Its Derivatives Guidelines, establishing a regulatory
+     framework for the sector. These guidelines define sustainability criteria for green hydrogen, regulate land and water use,
+     and outline procedures for approving expressions of interest and feasibility studies.
+
+     BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+To implement the Green Hydrogen Strategy and Roadmap, the Ministry of Energy and Petroleum has established a
+secretariat and the Program Coordination Committee (PCC). These entities will oversee the advancement of Kenya’s
+green hydrogen program by reviewing and approving expressions of interest and spearheading awareness and capacity-
+building initiatives. Several expressions of interest for green hydrogen development have already been received and are
+at various stages of review.
+
+8.3. Auto gas
+Growing demand for sustainable transportation, supported by government incentives such as the zero-rating of taxes
+on LPG, continues to drive the growth of the autogas market. During the review period, the Authority issued 10 Autogas
+construction permits.
+Additionally, the Authority proposed amendments to the Petroleum (Liquefied Petroleum Gas) Regulations, 2019 to
+introduce licensing provisions aimed at enhancing safety in Autogas operations.
+
+
+
+
+                                                                                                                                       40
+
+
+
+
+                                                              BIANNUAL ENERGY & PETROLEUM STATISTICS REPORT FINANCIAL YEAR 2024/2025
+TALK TO US
+
+                                    4
+
+
+
+
+                                            3
+                                                           6
+
+                            2
+
+                                                    5
+                                        8
+                                                1
+
+
+                                                                 7
+
+
+
+
+1   Head office                                                  Nyanza & Western Region - Kisumu            2
+    Energy and Petroleum Regulatory Authority                                2nd floor, Lake Basin Mall
+    Eagle Africa Centre, Longonot Rd, Upperhill                                   P.O Box 7540-40100
+    P.O Box 42681-00100 GPO, Nairobi                                                           Kisumu.
+    Hotline: +254 709 336 000                              Tel: +254 709 336 501 / +254 020 284 7501
+    Tel: +254 020 284 7000
+                                                                    North Western Region – Lodwar            4
+    North Rift Region – Eldoret                         Former WFP Office, Along Lodwar Airport Road,
+3
+    7th Floor, Eldoret Daima Towers                                              P.O Box 447 – 30500,
+    P.O Box 6950-30100                                                                        Lodwar.
+    Eldoret.                                                   +254 709 336 652 / +254 020 284 7652
+    Tel: +254 709 336 527 / +254 020 284 7527
+                                                                        North Eastern Region – Isiolo
+                                                                                                             6
+    Central Region - Nyeri                              Barsalinga Towers, 2nd Floor Along Isiolo Moyale
+5
+    4th Floor, KDS Centre, Kimathi Way                                                             Road.
+    P.O Box 1670-10100                                                              P.O Box 55 – 60300,
+    Nyeri                                                                                          Isiolo.
+    Tel: +254 709 336 552 / +254 020 284 7552                   +254 709 336 626 / +254 020 284 7626
+
+    Coast Region - Mombasa                                                 South Rift Region – Nakuru
+7                                                                                                            8
+    3rd floor, Kilindini Plaza Building, Moi Avenue        Jennifer Riria Hub, Kipchoge Road, Opposite
+    P.O. Box 83315-80100                                                         Bontana Hotel Nakuru,
+    Mombasa.                                                               P.O Box 785 – 20100, Nakuru
+    Tel: +254 709 336 577 / +254 020 284 7577                   +254 709 336 601 / +254 020 284 7601
+Published in March 2025
+
