@@ -74,12 +74,16 @@ Subject to revision with Mozilla.
 
 ## Section 4: Professional background
 
-Most relevant experience, two to three examples. Draft from facts I hold; add your own and cut anything you cannot evidence.
-1. **ALEA (2026 to date).** Sole author of an open planning model with a 1,881-parameter, 841-equation dimension-checked graph, 1,656 tests and 142 quality gates, built Kenya first. I wrote the defect register against my own work before applying and publish it.
-2. **datacraft.co.ke.** Founder of a registered Kenyan software company. [ add two or three specific projects with outcomes ]
-3. [ one more example with impact or leadership responsibility ]
+I have spent 30 years building national-scale technology in Africa, mostly public-sector systems where failure affects millions. My background is systems architecture and delivery, not power-system research; ALEA is my first energy-modelling project.
 
-**Technical expertise.** Python, async services, optimisation modelling with PyPSA and linopy on HiGHS, PostgreSQL, testing and quality-gate design (canaries that prove a check can fail), working with AI coding assistants and verifying their output. [ add what is true ]
+**Most relevant experience.**
+1. **Nigeria's electoral commission, CTO (2010 to 2013).** Commercial vendors quoted turnkey systems that would have spent the whole budget on hardware. I built a custom Linux, C++ and PostgreSQL stack instead, saving over US$100M in licensing, and registered 73.5 million citizens in 21 days, Africa's largest IT deployment. EU observers called the 2011 elections Nigeria's most credible, and the register is still the electoral roll.
+2. **Government of Kenya, ICT advisor to the Chief Justice (2016 to 2019).** I co-authored Kenya's National ICT Policy. In the Judiciary I found the 40-day filing time was a workflow problem, not a technology one, and cut five of seven manual handoffs; filing fell to 7 days. Adoption reached 93% of stations, 2.1M+ cases, and the systems remain in national use.
+3. **Power and compute (2007 to 2025).** Lead technical architect on Kebulania, a US$4.5B joint venture pairing a hyperscale data centre with 1GW of clean energy (2024 to 2025). Earlier, enterprise architecture and turnaround diagnostics for the Power Holding Company of Nigeria. This is why ALEA's data-centre hosting question matters to me.
+
+I am CEO and CTO of datacraft.co.ke, which builds platforms for African telecom, finance and public agencies. ALEA is separate from Datacraft's customers and its books are kept apart.
+
+**Technical expertise.** Python (FastAPI), Go, Rust, TypeScript, C and C++; PostgreSQL and PostGIS; Bayesian modelling and machine learning; AWS, Kubernetes and Terraform; security to ISO 27001 and NIST 800-53. For ALEA: PyPSA, linopy and HiGHS, quality-gate design (canaries that prove a check can fail), and working with AI coding assistants while verifying their output. B.Sc. Theoretical Physics, University of Nairobi; Executive Certificate, MIT Sloan.
 
 **Your role in the field at the end of the year.** The person African planners and open-energy modellers turn to for an auditable model of their grid; the author of the first public account of verifying AI-written technical software in a real energy model, defects included; and the maintainer who has handed the model to an institution that will keep it alive. What has changed because of the work: assumptions behind one country's plan can be inspected by anyone, and the method is reusable.
 
