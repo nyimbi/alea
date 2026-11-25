@@ -88,6 +88,8 @@ It addresses the Edinburgh priorities on verification and validation and on trad
 
 Researchers and RSEs in any numerical field using AI assistants. The energy-modelling community and African planners, who get an inspectable model. Teachers of computational skills, who get real defect cases. The applicant benefits least: the outputs are public, and the fund's own rule excludes work that mainly benefits an individual.
 
+**After the grant.** The template and playbook are open and need no revenue to stay available. The ALEA specification plans a free open core with paid institutional tiers (API volume, reports, consulting) run by my company with separate books. That is a plan only: no customer has paid and willingness to pay is untested. If it does not work, I will look for an institution to maintain the template.
+
 ## Who is involved
 
 I am Nyimbi Odero, a software developer in Kenya, founder of datacraft.co.ke, and the sole author of ALEA (371 commits since 11 October 2026). I apply as an individual because the fund pays individuals through Hack Club Bank and does not fund companies. One independent reviewer of the playbook is budgeted (US$1,500 honorarium) and will be named when they agree. No other person is listed as involved.

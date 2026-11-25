@@ -145,6 +145,8 @@ Engagement: publish the graph, datasets and report on Zenodo and GitHub; open up
 
 Beyond Kenya, I aim to publish open, sourced country data packs under a shared schema, one country at a time, only after Kenya passes its gates. I will build on PyPSA-Earth's open data, not replace it, and add provenance, archived sources and licence records per field. I will ask planners what they already have and report the answer whether or not it favours this project.
 
+After the grant: the code, graph and datasets are MIT and CC BY and need no revenue to stay available. The project's specification plans a free open core with paid tiers for institutions (higher API volume, reports, consulting), run by my company with separate books. That is a plan: no customer has paid and willingness to pay is untested. If it fails, I will seek a maintaining institution.
+
 ### Why this applicant (max 2000 characters)
 I am Nyimbi Odero, a software developer in Kenya and the founder of datacraft.co.ke, a registered Kenyan software company. I started ALEA on 11 October 2026 and have written it as a single maintainer since, with 371 commits, 1,656 tests and 142 quality gates. I know the problem as a Kenyan practitioner: the data and assumptions behind African grid plans are hard to reach. I applied as an individual because the work is public-interest and the code is MIT. The project's record includes defects I found in my own work and the gates built to catch them; the full list is in docs/plans/15-completion.md, written before applying, and I would rather the reviewer read it than discover it.
 

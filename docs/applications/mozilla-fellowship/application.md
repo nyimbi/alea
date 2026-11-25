@@ -77,6 +77,8 @@ Most relevant experience, two to three examples. Draft from facts I hold; add yo
 
 **What's next.** Three doors, any of which I can name a decision-maker for: (1) a public-interest institution in the region (a regulator, a university energy centre or a regional power pool) that adopts and maintains the model, which needs its leadership to say yes; (2) a funder that requires the assumptions graph with every plan it finances, which needs its programme committee; (3) a standard or community project that adopts the parameter-graph format. [ name the institutions you will approach ]
 
+**After the Fellowship.** The code, graph and datasets are open and stay available without revenue. The ALEA specification plans a free open core with paid tiers for institutions (API volume, reports, consulting), run by Datacraft with books kept apart from the Fellowship. That is a plan: no customer has paid and willingness to pay is untested, so door (1) is the fallback.
+
 ## Section 5: Mission alignment and motivation
 
 **Three things I hope to get (select up to three).** Funding to focus on my work; Access to Mozilla's network of partners and collaborators; Visibility and platforms to share my work.

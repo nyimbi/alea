@@ -39,3 +39,16 @@ No, not now. Three reasons.
 ## Evidence
 
 All snippets, none archived. Verify each against its primary page: lacunafund.org; digitalpublicgoods.net; the UNDP announcement as relayed by fundsforngos (23 June 2026); the GSMA press release; google.org/impact-challenges/ai-science; idrc-crdi.ca call page; gatesfoundation.org committed-grants pages. The claim that Kenya joined the DPGA in November 2026 comes from one snippet and is unverified.
+
+## Fifth pass: funders implied by the user archetypes
+
+2026-11-25. Archetypes 5, 6, 13, 14 and 17 in `spec4-ext.md` (DFIs, banks, humanitarian bodies, health facilities, insurers) point to four funder classes not searched before. Four standard-mode searches, snippets only, nothing archived.
+
+| Class | Funder | Status per snippet | Fit | Next step |
+|---|---|---|---|---|
+| Health-facility electrification | SEforALL Powering Healthcare Innovation Fund (about US$80k per grantee, 10 months, pot US$300k; Round 2 via UNOPS, ref 20543-IF-2-2025) | One page says a second cycle is open; no deadline or year given; the UNOPS notice is dated 2025 | Themes include data collection and analysis and AI. Closest fit of the four classes | Read the SEforALL fund page and UNGM notice; confirm eligibility for an individual or a Kenyan company |
+| Humanitarian | UNHCR Innovation Accelerator; UNHCR Environment and Climate Action Innovation Fund; Norway Humanitarian Innovation Programme | Accelerator EOI deadline July 2026 (sources disagree), closed. Digital Innovation Fund is UNHCR staff only. Norway call closed 17 Aug 2026 and limited to UN agencies and Norwegian-office NGOs | Poor. Energy is not the stated scope | Do not apply |
+| Climate risk insurance | Global Risk Modelling Alliance (up to EUR 1M per country call; Malawi and Senegal calls closed); UNDP inclusive insurance challenges (Uganda closed 24 Aug 2026) | No open call. GRMA funds risk modelling and open data tools | Plausible later for outage and resilience data, but its calls name specific countries and invite institutions | Watch for a Kenya call |
+| DFI and technical assistance | Transforming Energy Access TA Facility (rolling); UNDP Energy for Growth in Africa EOI; AfDB SEFA; EMP-A 2026 | TEA wave deadline unconfirmed; UNDP deadline not found; SEFA April 2026 call was green hydrogen; EMP-A 2026 call status not found | TA facilities usually serve governments or enterprises, not a software project | Ask Climate Compatible Growth about EMP-A; read TEA eligibility |
+
+Result: one class, health electrification, has an open-looking fund whose themes match. It is a small grant (US$80k) and the listing gives no deadline, so it is worth one eligibility check, not an application yet. The other three add no open calls. The total remains three applications.
