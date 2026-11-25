@@ -19,7 +19,27 @@ imports it.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+	from alea.config.base import AleaConfig
+	from alea.config.loader import ConfigError, deep_merge, load_config, parse_override
+	from alea.config.models import (
+		ApiConfig,
+		Config,
+		CostsConfig,
+		LoggingConfig,
+		MarketConfig,
+		PathsConfig,
+		PredictiveConfig,
+		RenewableConfig,
+		ReportingConfig,
+		ScanningConfig,
+		ScenarioConfig,
+		SectorConfig,
+		SolveConfig,
+	)
+	from alea.config.paths import config_dir, repo_root, resolve, scenario_path
 
 _LAZY = {
 	"AleaConfig": "alea.config.base",
@@ -46,7 +66,30 @@ _LAZY = {
 	"scenario_path": "alea.config.paths",
 }
 
-__all__ = sorted(_LAZY)
+__all__ = [
+	"AleaConfig",
+	"ApiConfig",
+	"Config",
+	"ConfigError",
+	"CostsConfig",
+	"LoggingConfig",
+	"MarketConfig",
+	"PathsConfig",
+	"PredictiveConfig",
+	"RenewableConfig",
+	"ReportingConfig",
+	"ScanningConfig",
+	"ScenarioConfig",
+	"SectorConfig",
+	"SolveConfig",
+	"config_dir",
+	"deep_merge",
+	"load_config",
+	"parse_override",
+	"repo_root",
+	"resolve",
+	"scenario_path",
+]
 
 
 def __getattr__(name: str) -> Any:

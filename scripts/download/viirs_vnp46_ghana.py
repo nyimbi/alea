@@ -39,7 +39,7 @@ def _list(short: str, year: int) -> list[tuple[str, float]]:
 		if not entries:
 			return out
 		for e in entries:
-			url = next(l["href"] for l in e["links"] if l["href"].startswith("https") and l["href"].endswith(".h5"))
+			url = next(k["href"] for k in e["links"] if k["href"].startswith("https") and k["href"].endswith(".h5"))
 			out.append((url, float(e["granule_size"])))
 		page += 1
 

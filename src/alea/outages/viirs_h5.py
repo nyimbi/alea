@@ -54,11 +54,30 @@ def decode_cloud_confidence(qf: NDArray[np.uint16]) -> NDArray[np.uint8]:
 	return np.where(blind, np.uint8(BLIND), confidence).astype(np.uint8)
 
 
+def _grid(f: h5py.File, path: str | Path) -> h5py.Group:
+	"""The granule's grid group, or a ValueError naming the file and dataset path."""
+	g = f.get(GRID)
+	if not isinstance(g, h5py.Group):
+		raise ValueError(f"{path}: {GRID!r} is not an HDF5 group (found {type(g).__name__})")
+	return g
+
+
+def _layer(g: h5py.Group, name: str, path: str | Path) -> h5py.Dataset:
+	"""One layer as a dataset, or a ValueError naming the file and dataset path."""
+	d = g.get(name)
+	if not isinstance(d, h5py.Dataset):
+		raise ValueError(f"{path}: {GRID}/{name} is not an HDF5 dataset (found {type(d).__name__})")
+	return d
+
+
 def axes(path: str | Path) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
 	"""(lat, lon) cell-centre axes of a granule."""
 	with h5py.File(path, "r") as f:
-		g = f[GRID]
-		return np.asarray(g["lat"][:], dtype=float), np.asarray(g["lon"][:], dtype=float)
+		g = _grid(f, path)
+		return (
+			np.asarray(_layer(g, "lat", path)[:], dtype=float),
+			np.asarray(_layer(g, "lon", path)[:], dtype=float),
+		)
 
 
 def read_pixels(
@@ -74,15 +93,15 @@ def read_pixels(
 	treats a NaN zenith as unbinnable rather than guessing a bin.
 	"""
 	with h5py.File(a2_path, "r") as f:
-		g = f[GRID]
-		radiance = np.asarray(g[RADIANCE_LAYER][:], dtype=np.float32)[rows, cols]
-		cloud = decode_cloud_confidence(np.asarray(g[CLOUD_LAYER][:])[rows, cols])
+		g = _grid(f, a2_path)
+		radiance = np.asarray(_layer(g, RADIANCE_LAYER, a2_path)[:], dtype=np.float32)[rows, cols]
+		cloud = decode_cloud_confidence(np.asarray(_layer(g, CLOUD_LAYER, a2_path)[:])[rows, cols])
 	radiance = np.where(radiance <= -999.0, np.nan, radiance).astype(np.float32)
 	cloud = np.where(np.isnan(radiance), np.uint8(BLIND), cloud).astype(np.uint8)
 	if a1_path is None:
 		return radiance, cloud, np.full(radiance.shape, np.nan, dtype=np.float32)
 	with h5py.File(a1_path, "r") as f:
-		raw = np.asarray(f[GRID][ZENITH_LAYER][:])[rows, cols]
+		raw = np.asarray(_layer(_grid(f, a1_path), ZENITH_LAYER, a1_path)[:])[rows, cols]
 	zenith = np.where(raw == ZENITH_FILL, np.nan, raw.astype(np.float32) * ZENITH_SCALE).astype(np.float32)
 	return radiance, cloud, zenith
 

@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
+import pytest
 
 from alea.outages import gridwatch, viirs_h5
 
@@ -157,3 +158,18 @@ def test_read_window_keeps_only_the_overpass_hours_of_the_named_days(tmp_path: P
 		pq.write_table(table, d / f"part-{hour}.parquet")
 	out = gridwatch.read_window(tmp_path, [date(2022, 1, 1)])
 	assert len(out) == 1 and pd.Timestamp(out.time.iloc[0]).hour == 1
+
+
+def test_a_missing_layer_raises_a_value_error_naming_file_and_dataset(tmp_path: Path):
+	path = _granule(tmp_path / "a2.h5", radiance=np.ones((N, N)))  # no cloud layer
+	rows = np.array([0], dtype=np.int64)
+	with pytest.raises(ValueError, match=r"a2\.h5.*" + viirs_h5.CLOUD_LAYER):
+		viirs_h5.read_pixels(path, rows, rows)
+
+
+def test_a_group_where_a_dataset_belongs_raises_a_value_error(tmp_path: Path):
+	path = tmp_path / "bad.h5"
+	with h5py.File(path, "w") as f:
+		f.create_group(viirs_h5.GRID).create_group("lat")
+	with pytest.raises(ValueError, match=r"bad\.h5.*lat"):
+		viirs_h5.axes(path)
