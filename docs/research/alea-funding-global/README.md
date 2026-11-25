@@ -49,12 +49,49 @@ Ten more searches plus primary pages. Result: still no open call for ALEA. Two t
 | Sovereign Tech, SSI Research Software Maintenance Fund, NSF PESOSE, Digital Research Alliance of Canada | various | UK, US and Canada institutions only, or closed | No | **snippet** |
 | Terra Viva category pages 4 and 5 | n/a | All deadlines passed (latest 31 Dec 2026, a conference award). Pages are ordered by post date, so pages 6 to 81 are older | None | archived, `terraviva-category-energy-climate-p4.html`, `p5.html` |
 
+## Third sweep (later the same day): what is open now
+
+Brief was "at least 10 open grants". I did not find 10 that are open, eligible and in scope. I found 12 that are open on paper; three are worth an application, and the rest fail on eligibility or scope. Method: eight more searches, a subagent read of two aggregators, then primary pages archived in `sources/third-sweep/`. Dates marked **primary** were read on the funder's own page; **snippet** rested on an aggregator or search result.
+
+### Worth applying to
+
+| # | Funder / call | Amount | Deadline | Fit and conditions | Evidence |
+|---|---|---|---|---|---|
+| 1 | NLnet open call | EUR 5k to 50k, then follow-on | 3 Jan 2027, 12:00 CET | General fund has no European-dimension rule (only the EU-funded themes do). Open licence required, proposal must be written by a human. Theme fit is the risk: frame as open geospatial and energy data infrastructure, not "a planning model" | **primary** |
+| 2 | Research Software Catalyst Fund, exploratory grants | up to US$50k, 3 to 6 months | 31 Dec 2026 | Worldwide, individuals and informal teams. **Excludes LLCs and companies**, so Datacraft cannot be the applicant; apply as an individual or team. Scope is trustworthy AI-assisted research software, so frame the PRG (cited, dimension-checked, gate-tested) as a verification layer for model-written code. OSI licence required (MIT qualifies) | **primary** |
+| 3 | Mozilla Foundation Fellowship 2027, Independent track | up to US$125k over 12 months | letter of intent 17 Dec 2026 | Individual only. Focus areas listed include energy. Funds must pass through a US 501(c)(3) sponsor, which may be a barrier | **snippet**; page 403 to curl, read by a subagent |
+
+### Open but a weak or conditional fit
+
+| # | Funder / call | Deadline | Why it is weak |
+|---|---|---|---|
+| 4 | FLOSS/fund (Zerodha), up to US$100k | rolling, quarterly review | Wants widely used projects; ALEA has no users yet. Revisit after release. **primary** |
+| 5 | Sovereign Tech Fund | rolling | EUR 50k minimum, no prototypes, rejects publicly funded work. Only a separable PRG library fits. **primary** |
+| 6 | GitHub Secure Open Source Fund, US$10k plus credits | rolling | Security-focused. ALEA is not a security project. **primary** |
+| 7 | RICH Hub Climate AI Innovation (AI4D), scaling grants to US$200k | rolling EOI | Needs a pilot-stage AI or data innovation; ALEA has no deployed pilot. **snippet** |
+| 8 | Keeling Curve Prize, US$50k each to 10 projects | 15 Jan 2027 | Rewards operating climate projects with measured impact. ALEA has none yet. **snippet** |
+| 9 | IEEE and UNDP GenAI for Good, Cities Edition, up to US$30k | 13 Dec 2026 | Teams of two or more people only, companies cannot enter, named city use cases, Apache 2.0 code. **primary** |
+| 10 | Tony Elumelu Foundation 2027, US$5k | not open; one aggregator says 31 Mar 2027, previous cycle opened 1 Jan | Seed capital for African early-stage businesses; would suit Datacraft, not ALEA. **snippet** |
+| 11 | AWS and Google Cloud research credits | rolling | Aimed at accredited institutions; a Kenyan company does not obviously qualify. **snippet** |
+| 12 | Breakthrough Energy Fellows Explorer track, US$50k to 250k | rolling per FAQ | Hard-tech decarbonisation startups; a planning model is not what it funds. Innovator concept papers closed 2 Nov 2026. **primary** |
+
+### Checked and rejected as closed or out of scope
+
+Climate Intervention Environmental Impact Fund (1 Dec 2026; the page states clean energy is out of scope), Horizon Europe CL5-2026-11 energy AI (1 Dec 2026, EUR 10M consortia), NOSTRADAMUS (EU SMEs), MIT Solve 2027 (closed 2 Nov 2026), Google for Startups AI First Africa (closed March 2026), TotalEnergies Startupper and AWS Compute for Climate (closed), Africa Prize 2027 (closed 8 Sep 2026), Sovereign Tech Fellowship (closed 6 Apr 2026), NumFOCUS small grants (closed), DOE Genesis Mission (US only), Kenya NRF (no energy or software call), Mission 300 and AESTAP (routed through national delivery units, no public call).
+
+### Reading
+
+- Three applications are realistic before the new year, and two of them (NLnet, Research Software Catalyst) need framing that the project can honestly support. Neither funds "an energy planning model" as such. NLnet funds open infrastructure; the Catalyst Fund funds trustworthy AI-assisted research software. Do not stretch a claim to fit: ALEA's graph is a cited dependency graph and 7.4% of its settable parameters reach the solver (see `docs/plans/15-completion.md`), and a reviewer can check.
+- Two of the three exclude Datacraft as applicant. Decide who applies as a person or team before drafting.
+- The count of grants for which ALEA fits cleanly is zero. The pattern across three sweeps is that energy-modelling money flows through consortia and invited partners, not open calls. The 10-grant target is better met by the partner route listed under "Decisions" than by more searching.
+
 ## Still not covered
 
 GIZ, Norad and Sida's own portals (only reached through aggregators), the World Bank direct trust funds, Kenyan ministries, and Terra Viva pages 6 to 81 (older by post date). Each of those was a single aggregator hit or unread. Treat "nothing found" for them as "not checked well".
 
 ## Next actions
 
+00. Decide the applicant (person or team, not Datacraft) and draft NLnet (3 Jan 2027) and the Research Software Catalyst Fund (31 Dec 2026) first; Mozilla letter of intent is due 17 Dec 2026.
 0. Calendar the AFD Digital Energy Challenge: look for the 2027 call around April to June. It needs a registered company, so decide which entity would apply.
 1. Fill the placeholders in `../alea-funding/enaccess-email.md` and send it.
 2. Open the Horizon Funding & Tenders portal and search the exact topic title to confirm status and deadline.
