@@ -21,6 +21,7 @@ non-converging loop from being mistaken for a malformed graph.
 
 from __future__ import annotations
 
+import difflib
 import math
 from collections import defaultdict, deque
 from collections.abc import Iterable, Mapping
@@ -1397,9 +1398,11 @@ class ParameterGraph:
 				)
 		self._range_excursions.clear()
 		self._solve_paths.clear()
+		unknown = self._unknown_offenders(values)
 		scoped: dict[str, ParameterValue] = {
-			k: _coerce_value(self, k, v) for k, v in values.items()
+			k: _coerce_value(self, k, v) for k, v in values.items() if k in self._nodes
 		}
+		supplied = dict(scoped)
 		# Before any arithmetic: a value outside its declared range is refused
 		# here rather than propagated and reported. The whole mapping is
 		# checked, not a caller-supplied subset, because `propagate` cannot tell
@@ -1470,6 +1473,7 @@ class ParameterGraph:
 				continue
 			scoped[parameter] = self._derive(parameter, scoped)
 
+		self._refuse_unhonoured(supplied, scoped, pinned, unknown)
 		computed = set(self._determiner) | self._loop_variables
 		moved: dict[str, float] = {}
 		for name, value in scoped.items():
@@ -1570,20 +1574,33 @@ class ParameterGraph:
 		# a caller who passes only the knobs they edited would otherwise leave
 		# every carried-over parameter absent, and the next derivation that
 		# reads one would fail on a parameter set that is complete in fact.
+		unknown = self._unknown_offenders(values)
 		scoped: dict[str, ParameterValue] = {
 			k: _coerce_value(self, k, v) for k, v in previous.values.items()
 		}
-		scoped.update({k: _coerce_value(self, k, v) for k, v in values.items()})
+		supplied = {
+			k: _coerce_value(self, k, v) for k, v in values.items() if k in self._nodes
+		}
+		scoped.update(supplied)
 		# The same refusal `propagate` makes, at the same door. `values` is
 		# checked rather than `scoped`: `scoped` is seeded from `previous`, whose
 		# values have already been through this, so checking it again would
 		# re-refuse a set that was admitted -- and on the sparse contract this
 		# method documents, `values` is exactly what the caller is setting.
-		self._refuse_out_of_range(
-			{k: _coerce_value(self, k, v) for k, v in values.items()}
-		)
+		self._refuse_out_of_range(supplied)
 		before = dict(scoped)
 		dirty = set(self.affected_by(seeds))
+		# A supplied derived name is re-derived so it can be compared with what
+		# the equation gives; left alone it would keep the caller's value.
+		# Only a value that differs from `previous` is a caller's setting. A
+		# derived value carried forward unchanged is a stale copy of the earlier
+		# result, which descendants of `changed` legitimately outgrow.
+		setting = {
+			k: v
+			for k, v in supplied.items()
+			if k in seeds or k not in previous.values or previous.values[k] != v
+		}
+		dirty |= {k for k in setting if k in self._determiner}
 
 		computable, waits_on_loop = self._phases()
 		for parameter in computable:
@@ -1611,6 +1628,7 @@ class ParameterGraph:
 			if parameter in dirty:
 				scoped[parameter] = self._derive(parameter, scoped)
 
+		self._refuse_unhonoured(setting, scoped, {}, unknown)
 		computed = set(self._determiner) | set(self._loop_variables)
 		moved: dict[str, float] = {}
 		for name in computed:
@@ -1812,6 +1830,83 @@ class ParameterGraph:
 			return
 		if value < low or value > high:
 			self._range_excursions[parameter] = value
+
+	def strip_computed(
+		self, values: Mapping[str, ParameterValue]
+	) -> dict[str, ParameterValue]:
+		"""``values`` without the names an equation computes.
+
+		For a caller that is *reporting* an over-determined scenario (the
+		conflict detector): it propagates the inputs, then compares the derived
+		results with what the user supplied. Passing the supplied derived
+		values into ``propagate`` is refused, because it would discard them.
+		"""
+		return {k: v for k, v in values.items() if k not in self._determiner}
+
+	def _unknown_offenders(self, values: Mapping[str, Any]) -> list[str]:
+		"""Keys that are not parameters, each with the nearest name.
+
+		A typo in a scenario otherwise does nothing and says nothing: the key
+		rides through ``values`` and no equation reads it. Returned, not raised,
+		so one refusal can list these with every discarded value.
+		"""
+		unknown = sorted(set(values) - set(self._nodes))
+		parts = []
+		for name in unknown:
+			close = difflib.get_close_matches(name, self._nodes, n=1)
+			parts.append(
+				f"{name!r} is not a parameter (closest: {close[0]!r})"
+				if close
+				else f"{name!r} is not a parameter"
+			)
+		return parts
+
+	def _refuse_unhonoured(
+		self,
+		supplied: Mapping[str, ParameterValue],
+		final: Mapping[str, ParameterValue],
+		pinned: Mapping[str, ParameterValue],
+		unknown: Iterable[str] = (),
+	) -> None:
+		"""Refuse a supplied value the propagation overwrote or cannot honour.
+
+		A derived name is overwritten by its equation, so a supplied value that
+		differs from the derived result was silently discarded. A value equal
+		to the result is accepted: the convenience paths pass a whole previous
+		result back in. Tolerance is 1e-9 relative, and 1e-6 for a name that
+		waits on a feedback loop, because a warm-started loop settles within
+		its own 1e-8 tolerance of the cold-start fixed point, not to the bit.
+		An endogenous name is *not* refused here: the post-solve audit supplies
+		the solved fleet as data, which is legitimate. The user-facing doors
+		(`propagate_change`, the CLI) refuse it as a knob. A loop variable is a
+		solver seed and is not compared. Every offender is listed, not the
+		first.
+		"""
+		_, waits = self._phases()
+		after_loop = set(waits)
+		offenders: list[str] = list(unknown)
+		for name, value in supplied.items():
+			if name in pinned or name not in self._nodes:
+				continue
+			equation = self._determiner.get(name)
+			if equation is not None:
+				derived = final[name]
+				if isinstance(value, str) or isinstance(derived, str):
+					same = value == derived
+				else:
+					tol = 1e-6 if name in after_loop else 1e-9
+					same = abs(value - derived) <= tol * max(abs(derived), 1.0)
+				if not same:
+					offenders.append(
+						f"{name} was supplied as {value!r} but {equation.id!r} "
+						f"derives {derived!r}"
+					)
+		if offenders:
+			raise GraphError(
+				"refused, because the value would be discarded: "
+				+ "; ".join(offenders)
+				+ ". Set the inputs it depends on, or pin it with intervene()"
+			)
 
 	def _refuse_out_of_range(self, values: Mapping[str, ParameterValue]) -> None:
 		"""Refuse a caller-supplied value outside the node's declared range.

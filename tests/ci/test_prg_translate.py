@@ -951,3 +951,25 @@ def test_the_note_drift_gate_notices_a_note_that_quotes_the_wrong_figure():
 			"the gate passed; it is not reading the sentence"
 		)
 	assert probe_exit_code(program) == 0, "the gate did not recover"
+
+
+def test_every_unreached_engine_field_has_a_stated_reason(monkeypatch):
+	from alea.prg import translate
+
+	assert translate.engine_fields_unexplained() == ()
+	assert all(len(text) > 40 for text in translate.ENGINE_FIELD_GAPS.values())
+
+	# Canary 1: translate a gap field. Its reason is now stale and must be flagged.
+	victim = next(iter(translate.ENGINE_FIELD_GAPS))
+	widened = translate.TRANSLATIONS + (
+		translate.Translation(prg_parameter="demand_growth", engine_field=victim, kind="absolute", note="x"),
+	)
+	monkeypatch.setattr(translate, "TRANSLATIONS", widened)
+	assert translate.engine_fields_unexplained() == (victim,)
+	monkeypatch.undo()
+
+	# Canary 2: drop a reason. The silent gap must be flagged.
+	trimmed = dict(translate.ENGINE_FIELD_GAPS)
+	del trimmed[victim]
+	monkeypatch.setattr(translate, "ENGINE_FIELD_GAPS", trimmed)
+	assert translate.engine_fields_unexplained() == (victim,)

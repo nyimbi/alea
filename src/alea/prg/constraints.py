@@ -368,6 +368,42 @@ def bound_routes(graph: ParameterGraph) -> tuple[str, ...]:
 	return tuple(r.equation_id for r in routes(graph) if r.status == "bound")
 
 
+def optimiser_routes(graph: ParameterGraph) -> tuple[str, ...]:
+	"""Bound routes that can reach the optimiser at all, by id.
+
+	A route is `bound` when its terms are settable scalars, and that is a
+	statement about the graph. It reaches the solver only if at least one side
+	reads a symbol with a declared network source (the fleet, the load), because
+	a constraint whose every term is data has no decision variable and
+	`add_constraints` refuses it as `every term is data`. A bound route with no
+	such symbol is a consistency check between inputs, which `consistency()`
+	already evaluates, and no network can make it bind.
+	"""
+	by_id = {e.id: e for e in _constraint_shaped(graph)}
+	return tuple(
+		i
+		for i in bound_routes(graph)
+		if any(name in _SOURCE_BY_SYMBOL for name in _symbols(by_id[i]))
+	)
+
+
+def optimiser_parameter_names(graph: ParameterGraph) -> tuple[str, ...]:
+	"""Settable scalars read by routes that can reach the optimiser."""
+	by_id = {e.id: e for e in _constraint_shaped(graph)}
+	names: set[str] = set()
+	for route in optimiser_routes(graph):
+		for name in _symbols(by_id[route]):
+			node = graph.nodes.get(name)
+			if (
+				name not in _SOURCE_BY_SYMBOL
+				and node is not None
+				and graph.is_settable(name)
+				and node.default is not None
+			):
+				names.add(name)
+	return tuple(sorted(names))
+
+
 def bound_parameter_names(graph: ParameterGraph | None = None) -> tuple[str, ...]:
 	"""The settable scalars the bindable inequalities read, by name.
 

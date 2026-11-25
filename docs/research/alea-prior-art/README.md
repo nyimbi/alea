@@ -30,16 +30,34 @@ Method: eight web searches (standard mode), eleven pages archived in `sources/`,
 | Settable parameters reaching an engine knob | 3 of 1,095 (carbon price, demand growth, fuel price) |
 | Settable parameters read as constraint terms | 78, across 43 bound inequality routes |
 | Overlap | 0 |
-| Settable parameters reaching any solver input | 81 of 1,095 (7.4%) |
+| Settable parameters reaching any solver input | 81 of 1,095 (7.4%) by the `bound` count; 9 of 1,095 (0.8%) that can move the optimiser (see the correction below) |
 | Settable parameters reaching none | 1,014 |
 | Engine knobs the graph never names | 7 of 10 |
 | Modules outside `prg/` that import it | `cli.py`, `api/routes/prg.py`, `whatif/service.py`; `planning/` imports none |
 
 The other 1,014 are connected to other nodes (no isolated node), so they propagate to derived values and feed the post-solve audit, but changing one does not change the optimiser's answer. Constraint terms only bind on the what-if path with `constrain=True`.
 
+### Reach by channel, measured 2026-11-25
+
+`uv run python scripts/measure_prg_engine_coupling.py` after T4a/T4b:
+
+| reach | settable parameters |
+|---|---|
+| knob | 3 |
+| constraint | 78 |
+| knob and constraint | 0 |
+| none, determines a derived node | 987 |
+| none, determines nothing (appears only in inequalities) | 27 |
+
+**Correction, same day.** The 81 counts a `bound` route as reaching the optimiser. `bound` means every term is a settable scalar. Of the 43 bound routes, 38 are all-data (no decision variable) and are refused by `add_constraints` as `every term is data`; they are consistency checks between inputs. Only 5 routes read a network-sourced symbol, and on the reference test network 4 of them add a constraint (`non_spinning_reserve_inside_margin` is refused there, the fixture having no non-spinning units). Parameters that can move the optimiser: 3 knobs plus 6 constraint terms, **9 of 1,095 (0.8%)**, not 81 (7.4%). `constraints.optimiser_routes` computes the set, and `test_every_bound_route_has_a_known_outcome_on_a_real_network` pins it.
+
+The 1,014 `none` parameters concentrate in Macro (244), Cost (86), Supply (38), environment (33) and Demand (31). The post-solve audit is not a column: it checks the identities of the parameters a result supplies (`audit.parameters_from_result`), which no property of the graph can enumerate. T4b's target of `none == 0` or a written reason per parameter is not met; the per-category list above is the work queue.
+
+The seven engine fields no PRG parameter reaches now each carry a stated reason in `translate.ENGINE_FIELD_GAPS`, and `engine_fields_unexplained()` fails when a field has none.
+
 ## Consequence for the claim
 
-The graph is the core of what makes ALEA inspectable. It is not yet the core of what ALEA computes: 7.4% of its settable surface moves the solver. Closing that, by adding translations and constraint routes, is what would make "core" accurate.
+The graph is the core of what makes ALEA inspectable. It is not yet the core of what ALEA computes: 0.8% of its settable surface can move the optimiser (7.4% by the looser `bound` count). Closing that, by adding translations and constraint routes, is what would make "core" accurate.
 
 ## Language adopted
 

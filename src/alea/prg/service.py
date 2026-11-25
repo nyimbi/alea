@@ -217,7 +217,10 @@ def check_scenario(
 	scenario is inconsistent when the truth is that it has not been computed.
 	"""
 	g = _graph(graph)
-	result = g.propagate(values)
+	# A checker recomputes every derived name from the inputs; a derived value
+	# handed in is a stale copy, not a setting, so it is dropped here rather
+	# than refused.
+	result = g.propagate(g.strip_computed(values))
 	violations = g.consistency(result.values)
 	# An `informational` equation is a reported correlation, so failing it is a
 	# finding rather than a contradiction -- the spec's own reading of the

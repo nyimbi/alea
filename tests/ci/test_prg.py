@@ -4420,7 +4420,7 @@ def test_setting_a_derived_parameter_is_an_over_determination(
 	"""The caller set `lcoe_usd_per_mwh`, which `lcoe_definition` computes."""
 	supplied = dict(defaults)
 	supplied["lcoe_usd_per_mwh"] = 40.0
-	result = graph.propagate(supplied)
+	result = graph.propagate(graph.strip_computed(supplied))
 	report = detect_conflicts(graph, result.values, supplied=supplied)
 	kinds = {c.kind for c in report.conflicts}
 	assert ConflictKind.OVER_DETERMINED in kinds, report.summary()
@@ -4441,7 +4441,7 @@ def test_an_over_determination_offers_the_levers_that_reach_it(
 	"""
 	supplied = dict(defaults)
 	supplied["lcoe_usd_per_mwh"] = 40.0
-	result = graph.propagate(supplied)
+	result = graph.propagate(graph.strip_computed(supplied))
 	report = detect_conflicts(graph, result.values, supplied=supplied)
 	conflict = report.of_kind(ConflictKind.OVER_DETERMINED)[0]
 	assert conflict.corrections, "an over-determination offered no lever"
@@ -4638,7 +4638,7 @@ def test_the_report_ranks_over_determination_above_a_range_excursion(
 	"""Severity is about how much of the scenario is invalidated."""
 	supplied = dict(defaults)
 	supplied["lcoe_usd_per_mwh"] = 40.0
-	result = graph.propagate(supplied)
+	result = graph.propagate(graph.strip_computed(supplied))
 	report = detect_conflicts(graph, result.values, supplied=supplied)
 	order = [c.kind for c in report.ranked()]
 	severity = {
@@ -4662,7 +4662,7 @@ def test_detecting_conflicts_without_the_supplied_set_checks_only_the_arithmetic
 	"""
 	supplied = dict(defaults)
 	supplied["lcoe_usd_per_mwh"] = 40.0
-	result = graph.propagate(supplied)
+	result = graph.propagate(graph.strip_computed(supplied))
 	report = detect_conflicts(graph, result.values)
 	assert report.of_kind(ConflictKind.OVER_DETERMINED) == ()
 
@@ -5473,7 +5473,7 @@ def test_incremental_propagation_equals_a_full_one(graph: ParameterGraph, defaul
 		# required to refuse *together*, which is a stronger claim than the
 		# equality below and covers the case a `continue` would have hidden.
 		try:
-			full = graph.propagate(values)
+			full = graph.propagate(graph.strip_computed(values))
 		except (DslError, FeedbackError) as refusal:
 			with pytest.raises(type(refusal)):
 				graph.propagate_incremental(values, previous, [name])

@@ -726,7 +726,9 @@ async def conflicts_resolve(
 
 	loaded = _graph()
 	values = _values(loaded, request.set)
-	report = detect_conflicts(loaded, loaded.propagate(values).values, supplied=request.set)
+	report = detect_conflicts(
+		loaded, loaded.propagate(loaded.strip_computed(values)).values, supplied=request.set
+	)
 	out: list[ResolutionOut] = []
 	for conflict in report.ranked():
 		# The first correction that *stays inside its declared range*, not
@@ -758,7 +760,7 @@ async def conflicts_resolve(
 		# refuses, which is a fix that trades one violation for another.
 		moved = dict(values)
 		moved[applied.parameter] = applied.current + applied.delta
-		after = loaded.propagate(moved)
+		after = loaded.propagate(loaded.strip_computed(moved))
 		out.append(
 			ResolutionOut(
 				conflict=_conflict_out(loaded, conflict),
@@ -984,7 +986,7 @@ async def conflicts(principal: AnalystDep, request: ConflictRequest) -> Conflict
 	from alea.prg.conflicts import detect_conflicts
 
 	graph = _graph()
-	propagated = graph.propagate(_values(graph, request.set))
+	propagated = graph.propagate(graph.strip_computed(_values(graph, request.set)))
 	report = detect_conflicts(
 		graph, propagated.values, supplied=request.set, rank=request.rank
 	)

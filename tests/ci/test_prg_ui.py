@@ -80,7 +80,6 @@ def test_saved_sets_round_trip_persist_and_refuse_what_propagate_refuses(tmp_pat
 
 
 def test_explorer_offers_pin_only_on_derived_nodes_and_runs_do(tmp_path):
-	graph = load_graph()
 	server = make_server(0, tmp_path / "sets.json")
 	threading.Thread(target=server.serve_forever, daemon=True).start()
 	base = f"http://127.0.0.1:{server.server_address[1]}"

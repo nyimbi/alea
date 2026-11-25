@@ -41,7 +41,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, cast
 
 from alea.prg.dsl import DslError
-from alea.prg.graph import Violation
+from alea.prg.graph import ParameterValue, Violation
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
 	from alea.prg.graph import ParameterGraph
@@ -246,9 +246,9 @@ class ConflictReport:
 
 def detect_conflicts(
 	graph: ParameterGraph,
-	values: Mapping[str, float],
+	values: Mapping[str, ParameterValue],
 	*,
-	supplied: Mapping[str, float] | None = None,
+	supplied: Mapping[str, ParameterValue] | None = None,
 	rank: int = 5,
 ) -> ConflictReport:
 	"""Every inconsistency in ``values``, with ranked corrections.
@@ -287,21 +287,20 @@ def detect_conflicts(
 	supplied_numeric: dict[str, float] | None = (
 		None
 		if supplied is None
-		else {k: v for k, v in supplied.items() if not isinstance(v, str)}
+		else {k: v for k, v in supplied.items() if not isinstance(v, str)}  # non-numeric levels have no delta
 	)
 	# The level names stay in `values`: a `choose` reads its selector there, and
 	# an equation without one never looks them up. `supplied` is narrowed because
 	# its values are subtracted from computed numbers.
 	del numeric
-	supplied = supplied_numeric
 
 	conflicts: list[Conflict] = []
 
 	# Over-determination first: a caller who set a derived parameter has
 	# contradicted the graph's own computation, and every residual below may be
 	# a consequence of that rather than an independent finding.
-	if supplied:
-		for name in sorted(set(supplied) & set(graph.computed())):
+	if supplied_numeric:
+		for name in sorted(set(supplied_numeric) & set(graph.computed())):
 			equation = graph.determined_by(name)
 			by = equation.id if equation is not None else "a feedback loop"
 			conflicts.append(
@@ -313,7 +312,7 @@ def detect_conflicts(
 						f"recomputed it and the supplied value was discarded"
 					),
 					corrections=_corrections_for(
-						graph, name, values, supplied[name], rank
+						graph, name, values, supplied_numeric[name], rank
 					),
 				)
 			)
@@ -617,7 +616,7 @@ def suggest_corrections(
 	graph: ParameterGraph,
 	values: Mapping[str, float],
 	*,
-	supplied: Mapping[str, float] | None = None,
+	supplied: Mapping[str, ParameterValue] | None = None,
 	rank: int = 5,
 ) -> tuple[Correction, ...]:
 	"""Every input move that would reduce some conflict, best first.

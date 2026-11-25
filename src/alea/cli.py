@@ -762,15 +762,35 @@ def solve(
 	config: ConfigOption = None,
 	network: Annotated[Path | None, typer.Option("--network", help="Input network.")] = None,
 	horizon: Annotated[int | None, typer.Option("--horizon", help="Planning horizon year.")] = None,
+	set_: Annotated[
+		list[str] | None,
+		typer.Option("--set", help="PRG parameter as name=value; repeatable. Refused if the engine cannot carry it."),
+	] = None,
 ) -> None:
 	"""Solve a capacity-expansion problem."""
 	from alea.planning.service import solve_scenario
 
+	overrides: dict[str, float] = {}
+	for item in set_ or []:
+		key, sep, raw = item.partition("=")
+		try:
+			if not sep:
+				raise ValueError("expected name=value")
+			overrides[key] = float(raw)
+		except ValueError as exc:
+			typer.secho(f"bad --set {item!r}: {exc}", fg=typer.colors.RED, err=True)
+			raise typer.Exit(code=2) from None
+
 	with _run("cli.solve", network=str(network), horizon=horizon) as run:
 		loaded = _load(config, None, None)
-		result = solve_scenario(
-			loaded, network=network, out=out, horizon=horizon, logger_=run.logger
-		)
+		try:
+			result = solve_scenario(
+				loaded, network=network, out=out, horizon=horizon,
+				overrides=overrides or None, logger_=run.logger,
+			)
+		except ValueError as exc:
+			typer.secho(str(exc), fg=typer.colors.RED, err=True)
+			raise typer.Exit(code=2) from None
 		run.record(out)
 		# No status check here: `solve_scenario` raises `ExpansionError` for
 		# anything that is not optimal, so reaching this line means the status is
@@ -1896,7 +1916,7 @@ def prg_conflicts(
 			# report, and refusing it would hide the conflict the caller has.
 			values[key] = float(raw)
 			supplied[key] = float(raw)
-		result = graph.propagate(values)
+		result = graph.propagate(graph.strip_computed(values))
 		report = detect_conflicts(
 			graph, result.values, supplied=supplied, rank=rank
 		)

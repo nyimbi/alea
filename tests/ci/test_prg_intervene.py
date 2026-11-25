@@ -100,7 +100,7 @@ def test_pin_inside_feedback_loop_breaks_it(graph, defaults, base, name, equatio
 	r = graph.intervene(defaults, {name: pinned})
 	assert r.values[name] == pinned
 	assert equation in r.cut
-	loop_vars = [set(l.values) for l in r.loops]
+	loop_vars = [set(lr.values) for lr in r.loops]
 	assert all(name not in lv for lv in loop_vars), "pinned variable left in a loop"
 	# The surviving loop equations hold at the new point.
 	for loop in graph.feedback_loops():

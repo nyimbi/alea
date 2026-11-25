@@ -1219,3 +1219,27 @@ def test_a_cost_row_with_no_lifetime_is_refused_when_the_column_exists(tmp_path:
 	_costs_frame(tmp_path, technology=["solar"], year=[2030], capex_usd_per_kw=[1000.0], lifetime_years=[np.nan])
 	with pytest.raises(InputError, match="lifetime"):
 		load_capital_costs(_config(tmp_path))
+
+
+def test_a_plain_solve_honours_a_graph_override_and_refuses_one_it_cannot_carry(
+	tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+	"""`alea solve --set` goes through the translation the what-if route uses.
+
+	The fixture fleet is solar only, so a carbon price cannot move its cost and
+	the objective is the wrong observable. `apply_parameters` records the base
+	snapshot in `network.meta` the first time it touches a network, so its
+	presence on the solved network says the override was applied before the solve.
+	"""
+	from alea.planning.service import solve_scenario
+	from alea.whatif.apply import _BASE_META_KEY
+
+	config = _aggregation_fixture(tmp_path, monkeypatch)
+	base = solve_scenario(config, out=tmp_path / "a", publish=False)
+	priced = solve_scenario(
+		config, out=tmp_path / "b", publish=False, overrides={"carbon_price_usd_per_tco2": 500.0}
+	)
+	assert _BASE_META_KEY not in base.network.meta
+	assert _BASE_META_KEY in priced.network.meta
+	with pytest.raises(ValueError, match="engine cannot carry"):
+		solve_scenario(config, out=tmp_path / "c", publish=False, overrides={"renewable_target": 0.5})

@@ -448,7 +448,8 @@ class WhatIfEngine:
 		unconstrained solve.
 		"""
 		from alea.prg.constraints import bound_parameter_names, bound_routes, constraint_function
-		from alea.prg.translate import to_scenario_parameters, translated
+		from alea.planning.scenario import scenario_parameters
+		from alea.prg.translate import translated
 
 		g = graph if graph is not None else _default_graph()
 		terms = set(bound_parameter_names(g))
@@ -461,7 +462,9 @@ class WhatIfEngine:
 			else {}
 		)
 		knob_values = {name: value for name, value in values.items() if name not in constraint_values}
-		params = to_scenario_parameters(g, knob_values, self._base, strict=strict)
+		params = scenario_parameters(
+			knob_values, self._base, graph=g, strict=strict, constrain=False
+		)
 		if outages is not None:
 			# Carried onto the parameters here rather than through `--set`, because
 			# an outage is not a graph parameter: the graph states quantities and

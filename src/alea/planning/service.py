@@ -12,6 +12,7 @@ without PyPSA-Earth present (AD-1, exit criterion 10).
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -166,6 +167,7 @@ def solve_scenario(
 	horizon: int | None = None,
 	scenario_id: str | None = None,
 	publish: bool = True,
+	overrides: Mapping[str, float] | None = None,
 	logger_: Any = None,
 ) -> SolveResult:
 	"""Solve a capacity-expansion problem.
@@ -181,6 +183,12 @@ def solve_scenario(
 	be used as a what-if base -- which is how the API shipped reading an empty
 	directory. Set it off for a throwaway solve. ``scenario_id`` names the entry;
 	it defaults to the network's own id, which is stable across rebuilds.
+
+	``overrides`` states a scenario in the PRG's parameter names. They go through
+	`alea.planning.scenario.scenario_parameters`, the entry point the what-if
+	route also uses, and are applied to the network before aggregation, so a plain
+	solve honours the same translations. A parameter the engine cannot carry is
+	refused by name rather than dropped.
 	"""
 	assert config is not None, "config must not be None"
 	log = logger_ or _log
@@ -216,6 +224,17 @@ def solve_scenario(
 			logger_=log,
 		)
 		inputs = [p.inputs[0] for p in provenances if p.inputs]
+
+	if overrides:
+		from alea.planning.scenario import scenario_parameters
+		from alea.whatif.apply import apply_parameters
+		from alea.whatif.params import ScenarioParameters
+
+		# A neutral base: ScenarioParameters' own defaults grow demand 4% a year
+		# and add a 50 USD/tCO2 price, which a plain solve never asked for.
+		neutral = ScenarioParameters(demand_growth=0.0, carbon_price_usd_per_tco2=0.0)
+		built = apply_parameters(built, scenario_parameters(overrides, built, base=neutral))
+		log.info("scenario_overrides_applied", parameters=sorted(overrides))
 
 	if config.solve.time_aggregation > 1:
 		validation = require_aggregation_validation(built, config.solve.time_aggregation)

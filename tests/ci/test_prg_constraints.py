@@ -701,3 +701,38 @@ def test_a_fully_data_equation_is_refused_rather_than_added():
 	assert "114.99" in reason
 	# And the budget, which does name a dispatch variable, still bound.
 	assert "carbon_budget_constraint" in report.added
+
+
+def test_every_bound_route_has_a_known_outcome_on_a_real_network(graph: ParameterGraph):
+	"""43 routes are `bound`; this says which of them can ever bind the optimiser.
+
+	`bound` means every term is a settable scalar. It does not mean the route
+	reaches the optimiser: a route whose every term is data has no decision
+	variable, and `add_constraints` refuses it. On the reference network 4 of
+	the 43 add a constraint, 38 are refused as all-data, and
+	`non_spinning_reserve_inside_margin` reads a network symbol but is refused
+	here because the fixture carries no non-spinning units. The split is pinned
+	from both sides so a route changing class is looked at, not absorbed.
+	"""
+	from alea.prg.constraints import optimiser_parameter_names, optimiser_routes
+
+	_, report = _solve(_network(coal_marginal=100.0, coal_capital=1000.0), {})
+	bound = set(bound_routes(graph))
+	assert len(bound) == 43
+	added = set(report.added)
+	refused = {r.equation_id: r.reason for r in report.skipped if r.equation_id in bound}
+	assert added <= bound
+	assert added | set(refused) == bound
+	assert added == {
+		"carbon_budget_constraint",
+		"fit_capacity_bound",
+		"reserve_margin",
+		"reserve_margin_with_firm_vre",
+	}
+	# Every route outside `optimiser_routes` is all-data, and is refused for that reason.
+	reachable = set(optimiser_routes(graph))
+	assert added <= reachable
+	for route in bound - reachable:
+		assert "every term is data" in refused[route], (route, refused[route])
+	assert reachable - added == {"non_spinning_reserve_inside_margin"}
+	assert len(optimiser_parameter_names(graph)) == 6

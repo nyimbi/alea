@@ -356,6 +356,10 @@ Feedback loops are collapsed into super-nodes and solved iteratively. The solver
 
 If a loop fails to converge after `max_iter` (default 20), the solver raises an error and reports the loop to the user.
 
+### Refusal: a value the graph would discard
+
+`propagate` overwrites a derived name with its equation's result. A caller who supplies a different value for it used to get an answer to a question they did not ask, with their number gone. `propagate` and `propagate_incremental` now raise `GraphError` naming the parameter, the supplied value, the equation and the value it derives. Every offender is listed, and a name that is not a parameter is refused with the closest known name. A supplied value equal to the derived result is accepted, because the convenience paths pass a whole previous result back in. To hold a derived name at a value on purpose, pin it with `intervene()`. Conflict reporting (`alea prg conflicts`, the API route) strips computed names first with `strip_computed()`, since reporting the clash is the point there.
+
 ### Intervention: pinning a derived quantity
 
 `propagate` asks what follows from changing an input. `ParameterGraph.intervene(values, do={name: value})` asks a different question: what if a *derived* quantity were held at a value. The equation that normally fixes each pinned name is cut for that call and reported in `cut`. Every descendant is recomputed from the pinned value, and the pinned value must lie in the node's declared range. A pinned name inside a feedback loop breaks the loop, and the remaining loop equations are re-solved without it. The stored graph is never changed.

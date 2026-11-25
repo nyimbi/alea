@@ -418,7 +418,7 @@ builds from the catalog (`docs/params.md`):
 | Constraint routes | 43 inequality routes marked bound; 78 parameters are their terms |
 | Feedback loops | 2, solved by Tarjan SCC detection and damped Gauss-Seidel |
 | Uncoupled | 0 nodes carry no equation or edge |
-| Reaches the solver | 81 of 1,095 settable parameters (3 engine knobs, 78 constraint terms); the other 1,014 propagate through the graph and its audit but do not move the optimiser. `uv run python scripts/measure_prg_engine_coupling.py` |
+| Reaches the optimiser | 9 of 1,095 settable parameters (3 engine knobs, 6 terms of the 5 constraint routes that read the fleet or load). A further 72 are terms of 38 bound inequalities between inputs, which the graph checks but no network can make bind. `uv run python scripts/measure_prg_engine_coupling.py` |
 
 ```sh
 uv run alea prg summary       # the graph's shape

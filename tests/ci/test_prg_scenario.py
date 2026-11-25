@@ -601,3 +601,19 @@ def test_the_command_exits_three_on_an_infeasible_scenario(tmp_path) -> None:
 	assert result.exit_code == 3, result.output
 	assert "infeasible" in result.output.lower()
 	assert "solved:" not in result.stdout
+
+
+def test_solve_and_whatif_hand_the_engine_identical_parameters(tmp_path, graph: ParameterGraph) -> None:
+	"""The planning entry point and the what-if route agree exactly, not closely."""
+	from alea.planning.scenario import scenario_parameters
+
+	network = _network()
+	values = {"carbon_price_usd_per_tco2": 200.0, "fuel_price_usd_per_mwh": 60.0, "reserve_margin_min": 0.2}
+	engine = WhatIfEngine(network, cache_root=tmp_path / "cache")
+	via_whatif = engine.solve_from_prg(values, graph=graph).parameters
+	via_planning = scenario_parameters(values, network, graph=graph)
+	assert via_planning == via_whatif
+	assert via_planning.carbon_price_usd_per_tco2 == 200.0
+	assert via_planning.gas_price_multiplier != 1.0
+	# The constraint term is lifted out, not translated: it is no engine knob.
+	assert "reserve_margin_min" not in via_planning.model_dump()

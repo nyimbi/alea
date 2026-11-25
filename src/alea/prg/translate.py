@@ -54,6 +54,8 @@ __all__ = [
 	"coverage",
 	"cross_layer_disagreements",
 	"cross_layer_report",
+	"ENGINE_FIELD_GAPS",
+	"engine_fields_unexplained",
 	"engine_fields_unreached",
 	"from_scenario_parameters",
 	"to_scenario_parameters",
@@ -205,6 +207,68 @@ def coverage(graph: ParameterGraph) -> dict[str, Any]:
 		"endogenous": graph.endogenous(),
 		"engine_unreached": engine_fields_unreached(),
 	}
+
+
+#: Why each engine knob the graph cannot speak to has no translation.
+#:
+#: A silent gap is the defect; an absent translation with a stated reason is a
+#: finding. Each entry names the closest PRG parameter (or none) and the one
+#: thing that blocks the mapping. Read by `engine_fields_unexplained`, which
+#: fails when a knob is unreached and has no entry, so a new engine field
+#: cannot join the gap unannounced.
+ENGINE_FIELD_GAPS: dict[str, str] = {
+	"battery_cost_multiplier": (
+		"Closest PRG parameter: capex_battery (USD/kWh). A ratio translation, "
+		"which needs the network's base battery capital cost; `_base_level` "
+		"reads only the gas marginal-cost snapshot, so there is no base to "
+		"divide by."
+	),
+	"coal_eaf": (
+		"Closest PRG parameter: forced_outage_rate_coal (an unavailability "
+		"share). The engine multiplies each unit's own base availability, so "
+		"the factor is (1 - new rate) over the unit's base availability, and "
+		"the base is not recorded. The PRG rate also omits planned outages, so "
+		"the two are not the same quantity."
+	),
+	"drought_multiplier": (
+		"Closest PRG parameter: hydro_drought_multiplier, a yield multiplier "
+		"in [0.6, 1.15] where below 1 is drier. The engine divides hydro "
+		"availability by this knob, in [1, 3], where above 1 is drier. They are "
+		"reciprocal, not equal, and the engine refuses a value other than 1 "
+		"unless the SSP pathway is high-emissions."
+	),
+	"hydrogen_export_twh_per_year": (
+		"Closest PRG parameter: hydrogen_export_volume (MWh/year). The "
+		"translation is an exact unit scale of 1e-6, and `Translation.kind` "
+		"has only `absolute` and `ratio`, so it cannot carry a scale."
+	),
+	"outages": (
+		"Engine-internal shape. A set of lines taken out or derated over a "
+		"snapshot window is a topology change, not a scalar. The PRG's "
+		"line_outage_* parameters describe an outage distribution, not a "
+		"chosen outage."
+	),
+	"renewable_multiplier": (
+		"No PRG parameter. The engine scales each renewable carrier's buildable "
+		"potential (p_nom_max). The PRG states targets and penetration limits, "
+		"which are constraints on a build, not the size of the resource."
+	),
+	"ssp_pathway": (
+		"Closest PRG parameter: ssp_pathway, a categorical with levels such as "
+		"ssp2_4_5. The engine takes the string 'SSP2-4.5', and the translation "
+		"path carries floats only, so a level name has no route in."
+	),
+}
+
+
+def engine_fields_unexplained() -> tuple[str, ...]:
+	"""Unreached engine knobs that carry no reason, and reasons for reached ones.
+
+	Empty when every unreached knob has an `ENGINE_FIELD_GAPS` entry and no
+	entry names a knob that is now translated or does not exist.
+	"""
+	unreached = set(engine_fields_unreached())
+	return tuple(sorted(unreached ^ set(ENGINE_FIELD_GAPS)))
 
 
 def engine_fields_unreached() -> tuple[str, ...]:
