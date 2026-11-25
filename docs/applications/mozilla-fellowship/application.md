@@ -62,9 +62,9 @@ One open schema across African countries lets neighbouring decisions be compared
 **Disruption.** Closed-model consultancies and vendors, whose value is that nobody can check the assumptions. If any planner, lender or journalist can rerun a plan and see every source, a hidden assumption stops being an asset. So do announcements made without a feasibility check, like Kenya's data-centre deal.
 
 **Quarterly milestones (June 2027 to May 2028).**
-- Q1, Jun to Aug 2027: publish a check of what PyPSA-Earth, AETOS and Calliope Africa offer for data-centre hosting, plus planner conversations; Kenya baseline from EPRA figures; the model refuses hand-set derived values and unknown names; all 43 unarchived sources saved; Kenya weather and grid datasets published with provenance; two African planners recruited.
-- Q2, Sep to Nov 2027: design and held-out gate for demand-surge forecasting; data-centre load with a peak shape, checked against effective capacity; country-data schema; intervention operator; all 1,095 settable parameters classified as reaching the optimiser or not; first full-year Kenya solve.
-- Q3, Dec 2027 to Feb 2028: each of the 10 unverified claims produced or withdrawn, so site-reliability estimates carry a validation status; large-load signal replayed against the May 2024 Olkaria announcement; planner findings and sensitivity report published.
+- Q1, Jun to Aug 2027: publish a check of what PyPSA-Earth, AETOS and Calliope Africa offer for data-centre hosting; Kenya baseline from EPRA figures; the model refuses hand-set derived values and unknown names; 43 unarchived sources saved; Kenya weather and grid datasets published; two African planners recruited.
+- Q2, Sep to Nov 2027: demand-surge forecasting design with a held-out gate; data-centre load with a peak shape, checked against capacity; country-data schema; intervention operator; all 1,095 settable parameters classified; first full-year Kenya solve.
+- Q3, Dec 2027 to Feb 2028: each of the 10 unverified claims produced or withdrawn; large-load signal replayed against the May 2024 Olkaria announcement; planner findings and sensitivity report published.
 - Q4, Mar to May 2028: verification playbook tested on a second codebase; handover to a maintaining institution; final report with before and after numbers.
 Subject to revision with Mozilla.
 
