@@ -59,7 +59,7 @@ Primary issue area: **Hard infrastructure: compute, energy, quantum, and the ext
 
 One open schema across African countries lets neighbouring decisions be compared.
 
-**Disruption.** It changes what counts as evidence for a power decision: from a report only its author can rerun to a model anyone can challenge; from a costless announcement to a claim with a standard of proof; from "the tests pass" to claims labelled verified or unverified.
+**Disruption.** Closed-model consultancies and vendors, whose value is that nobody can check the assumptions. If any planner, lender or journalist can rerun a plan and see every source, a hidden assumption stops being an asset. So do announcements made without a feasibility check, like Kenya's data-centre deal.
 
 **Quarterly milestones (June 2027 to May 2028).**
 - Q1, Jun to Aug 2027: a check of what PyPSA-Earth, AETOS and Calliope Africa already offer for data-centre hosting, and two or more planner conversations, published whatever they show; a Kenya baseline from EPRA figures; the model refuses what it cannot honour (a hand-set derived value, an unknown name); the default scenario passes its own check; all 43 unarchived sources saved with checksums; Kenya weather-year and grid datasets published with provenance; two African planners recruited.
